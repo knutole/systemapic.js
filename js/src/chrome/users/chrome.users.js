@@ -476,11 +476,12 @@ Wu.Chrome.Users = Wu.Chrome.extend({
 		}
 
 		// send event
-		app.Socket.sendUserEvent({
-		    	user : app.Account.getFullName(),
-		    	event : '`invited` ' + options.emails.join(', '),
-		    	description : description,
-		    	timestamp : Date.now()
+		// app.Socket.sendUserEvent({
+		app.log('invited', {
+				info : {
+					users : options.emails.join(', '),
+					category : 'Users'
+				}
 		});
 	},
 
@@ -662,7 +663,7 @@ Wu.Chrome.Users = Wu.Chrome.extend({
 				});
 
 			}, this);
-		}, this);
+		}.bind(this));
 
 
 		// input focus, show dropdown
@@ -1145,15 +1146,6 @@ Wu.Chrome.Users = Wu.Chrome.extend({
 		// open/close
 		this._isOpen ? chrome.close(this) : chrome.open(this); // pass this tab
 
-		if (this._isOpen) {
-			// fire event
-			app.Socket.sendUserEvent({
-				user : app.Account.getFullName(),
-				event : 'opened',
-				description : 'the left pane',
-				timestamp : Date.now()
-			});
-		}
 	},
 
 	_show : function () {

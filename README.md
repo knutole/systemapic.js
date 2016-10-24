@@ -1,1 +1,1 @@
-### Front-end client lib for Systemapic
+### Front-end client lib for Mapic

@@ -1,4 +1,4 @@
-/*! nouislider - 8.2.1 - 2015-12-02 21:43:14 */
+/*! nouislider - 8.3.0 - 2016-04-12 15:55:45 */
 
 (function (factory) {
 
@@ -87,6 +87,7 @@
 
 	// Counts decimals
 	function countDecimals ( numStr ) {
+		numStr = String(numStr);
 		var pieces = numStr.split(".");
 		return pieces.length > 1 ? pieces[1].length : 0;
 	}
@@ -109,13 +110,9 @@
 		}
 	}
 
-	// http://youmightnotneedjquery.com/#has_class
+	// https://plainjs.com/javascript/attributes/adding-removing-and-testing-for-classes-9/
 	function hasClass ( el, className ) {
-		if ( el.classList ) {
-			el.classList.contains(className);
-		} else {
-			new RegExp('(^| )' + className + '( |$)', 'gi').test(el.className);
-		}
+		return el.classList ? el.classList.contains(className) : new RegExp('\\b' + className + '\\b').test(el.className);
 	}
 
 	// https://developer.mozilla.org/en-US/docs/Web/API/Window/scrollY#Notes
@@ -425,12 +422,17 @@
 		return value;
 	};
 
-	Spectrum.prototype.getApplicableStep = function ( value ) {
-
-		// If the value is 100%, return the negative step twice.
-		var j = getJ(value, this.xPct), offset = value === 100 ? 2 : 1;
-		return [this.xNumSteps[j-2], this.xVal[j-offset], this.xNumSteps[j-offset]];
+	Spectrum.prototype.getNearbySteps = function ( value ) {
+		var j = getJ(value, this.xPct);
+                return {stepBefore: { xVal:this.xVal[j-2], xNumSteps: this.xNumSteps[j-2] },
+			thisStep:   { xVal:this.xVal[j-1], xNumSteps: this.xNumSteps[j-1] },
+			stepAfter:  { xVal:this.xVal[j-0], xNumSteps: this.xNumSteps[j-0] } };
 	};
+ 
+	Spectrum.prototype.countStepDecimals = function () {
+		var stepDecimals = this.xNumSteps.map(countDecimals);
+		return Math.max.apply(null, stepDecimals);
+ 	};
 
 	// Outside testing
 	Spectrum.prototype.convert = function ( value ) {
@@ -491,7 +493,7 @@
 
 		// Validate input. Values aren't tested, as the public .val method
 		// will always provide a valid location.
-		if ( !Array.isArray( entry ) || !entry.length || entry.length > 2 ) {
+		if ( !Array.isArray( entry ) || !entry.length ) {
 			throw new Error("noUiSlider: 'start' option is incorrect.");
 		}
 
@@ -533,6 +535,8 @@
 			parsed.connect = 3;
 		} else if ( entry === false ) {
 			parsed.connect = 0;
+		} else if (parsed.handles > 2) {
+			throw new Error("noUiSlider: 'connect' option does not support sliders with more than two handles.");
 		} else {
 			throw new Error("noUiSlider: 'connect' option doesn't match handle count.");
 		}
@@ -560,6 +564,11 @@
 			throw new Error("noUiSlider: 'margin' option must be numeric.");
 		}
 
+		// Issue #582
+		if ( entry === 0 ) {
+			return;
+		}
+
 		parsed.margin = parsed.spectrum.getMargin(entry);
 
 		if ( !parsed.margin ) {
@@ -568,6 +577,10 @@
 	}
 
 	function testLimit ( parsed, entry ) {
+
+		if (parsed.handles !== 2) {
+			throw new Error("noUiSlider: 'limit' option only valid with exactly two handles.");
+		}
 
 		if ( !isNumeric(entry) ){
 			throw new Error("noUiSlider: 'limit' option must be numeric.");
@@ -749,7 +762,7 @@ function closure ( target, options ){
 
 	// All variables local to 'closure' are prefixed with 'scope_'
 	var scope_Target = target,
-		scope_Locations = [-1, -1],
+		scope_Locations = [],
 		scope_Base,
 		scope_Handles,
 		scope_Spectrum = options.spectrum,
@@ -785,26 +798,12 @@ function closure ( target, options ){
 
 
 	// Delimit proposed values for handle positions.
-	function getPositions ( a, b, delimit ) {
-
-		// Add movement to current position.
-		var c = a + b[0], d = a + b[1];
-
-		// Only alter the other position on drag,
-		// not on standard sliding.
-		if ( delimit ) {
-			if ( c < 0 ) {
-				d += Math.abs(c);
-			}
-			if ( d > 100 ) {
-				c -= ( d - 100 );
-			}
-
-			// Limit values to 0 and 100.
-			return [limit(c), limit(d)];
+	function getPositions ( a, b ) {
+		var result = b.slice();
+		for (var i=0 ; i<result.length ; i++) {
+			result[i]+=a;
 		}
-
-		return [c,d];
+		return result;
 	}
 
 	// Provide a clean event with standardized offset values.
@@ -1116,7 +1115,8 @@ function closure ( target, options ){
 	function addMarking ( spread, filterFunc, formatter ) {
 
 		var style = ['horizontal', 'vertical'][options.ort],
-			element = document.createElement('div');
+			element = document.createElement('div'),
+			out = '';
 
 		addClass(element, cssClasses[20]);
 		addClass(element, cssClasses[20] + '-' + style);
@@ -1142,11 +1142,11 @@ function closure ( target, options ){
 			values[1] = (values[1] && filterFunc) ? filterFunc(values[0], values[1]) : values[1];
 
 			// Add a marker for every point
-			element.innerHTML += '<div ' + getTags(offset, cssClasses[21], values) + '></div>';
+			out += '<div ' + getTags(offset, cssClasses[21], values) + '></div>';
 
 			// Values are only appended for points marked '1' or '2'.
 			if ( values[1] ) {
-				element.innerHTML += '<div '+getTags(offset, cssClasses[22], values)+'>' + formatter.to(values[0]) + '</div>';
+				out += '<div '+getTags(offset, cssClasses[22], values)+'>' + formatter.to(values[0]) + '</div>';
 			}
 		}
 
@@ -1154,6 +1154,7 @@ function closure ( target, options ){
 		Object.keys(spread).forEach(function(a){
 			addSpread(a, spread[a]);
 		});
+		element.innerHTML = out;
 
 		return element;
 	}
@@ -1181,7 +1182,8 @@ function closure ( target, options ){
 
 	// Shorthand for base dimensions.
 	function baseSize ( ) {
-		return scope_Base['offset' + ['Width', 'Height'][options.ort]];
+		var rect = scope_Base.getBoundingClientRect(), alt = 'offset' + ['Width', 'Height'][options.ort];
+		return options.ort === 0 ? (rect.width||scope_Base[alt]) : (rect.height||scope_Base[alt]);
 	}
 
 	// External event handling
@@ -1197,9 +1199,21 @@ function closure ( target, options ){
 
 			if ( event === eventType ) {
 				scope_Events[targetEvent].forEach(function( callback ) {
-					// .reverse is in place
-					// Return values as array, so arg_1[arg_2] is always valid.
-					callback.call(scope_Self, asArray(valueGet()), handleNumber, asArray(inSliderOrder(Array.prototype.slice.call(scope_Values))), tap || false);
+
+					callback.call(
+						// Use the slider public API as the scope ('this')
+						scope_Self,
+						// Return values as array, so arg_1[arg_2] is always valid.
+						asArray(valueGet()),
+						// Handle index, 0 or 1
+						handleNumber,
+						// Unformatted slider values
+						asArray(inSliderOrder(Array.prototype.slice.call(scope_Values))),
+						// Event is fired by tap, true or false
+						tap || false,
+						// Left offset of the handle, in relation to the slider
+						scope_Locations
+					);
 				});
 			}
 		});
@@ -1279,11 +1293,12 @@ function closure ( target, options ){
 		}
 
 		var handles = data.handles || scope_Handles, positions, state = false,
-			proposal = ((event.calcPoint - data.start) * 100) / data.baseSize,
-			handleNumber = handles[0] === scope_Handles[0] ? 0 : 1, i;
+			proposal = ((event.calcPoint - data.start) * 100) / data.baseSize, handleNumber, i;
+
+		for (handleNumber = 0 ; scope_Handles[handleNumber] !== handles[0] ; handleNumber++) { }
 
 		// Calculate relative positions for the handles.
-		positions = getPositions( proposal, data.positions, handles.length > 1);
+		positions = getPositions( proposal, data.positions );
 
 		state = setHandle ( handles[0], positions[handleNumber], handles.length === 1 );
 
@@ -1376,10 +1391,7 @@ function closure ( target, options ){
 			handles: data.handles,
 			handleNumber: data.handleNumber,
 			buttonsProperty: event.buttons,
-			positions: [
-				scope_Locations[0],
-				scope_Locations[scope_Handles.length - 1]
-			]
+			positions: scope_Locations.slice()
 		}), endEvent = attach(actions.end, d, end, {
 			handles: data.handles,
 			handleNumber: data.handleNumber
@@ -1434,6 +1446,11 @@ function closure ( target, options ){
 
 		// Find the handle closest to the tapped position.
 		handleNumber = ( location < total/2 || scope_Handles.length === 1 ) ? 0 : 1;
+		
+		// Check if handler is not disablet if yes set number to the next handler
+		if (scope_Handles[handleNumber].hasAttribute('disabled')) {
+			handleNumber = handleNumber ? 0 : 1;
+		}
 
 		location -= offset(scope_Base)[ options.style ];
 
@@ -1543,18 +1560,18 @@ function closure ( target, options ){
 	// Test suggested values and apply margin, step.
 	function setHandle ( handle, to, noLimitOption ) {
 
-		var trigger = handle !== scope_Handles[0] ? 1 : 0,
-			lowerMargin = scope_Locations[0] + options.margin,
-			upperMargin = scope_Locations[1] - options.margin,
-			lowerLimit = scope_Locations[0] + options.limit,
-			upperLimit = scope_Locations[1] - options.limit;
+		var trigger;
+		for (trigger = 0 ; scope_Handles[trigger] !== handle ; trigger++) { }
+
+		var lowerMargin = scope_Locations[trigger-1] + options.margin,
+			upperMargin = scope_Locations[trigger+1] - options.margin,
+			lowerLimit = scope_Locations[trigger-1] + options.limit,
+			upperLimit = scope_Locations[trigger+1] - options.limit;
 
 		// For sliders with multiple handles,
 		// limit movement to the other handle.
 		// Apply the margin option by adding it to the handle positions.
-		if ( scope_Handles.length > 1 ) {
-			to = trigger ? Math.max( to, lowerMargin ) : Math.min( to, upperMargin );
-		}
+		to = Math.min(Math.max(to, isNaN(lowerMargin)?0:lowerMargin), isNaN(upperMargin)?100:upperMargin);
 
 		// The limit option has the opposite effect, limiting handles to a
 		// maximum distance from another. Limit must be > 0, as otherwise
@@ -1608,21 +1625,20 @@ function closure ( target, options ){
 	}
 
 	// Loop values from value method and apply them.
-	function setValues ( count, values ) {
+	function setValues ( values ) {
 
-		var i, trigger, to;
-
-		// With the limit option, we'll need another limiting pass.
-		if ( options.limit ) {
-			count += 1;
-		}
+		var i, trigger, to,
+		basePasses = (values.length*values.length),
+		passesIncludingLimitingPass = basePasses+(options.limit?values.length:0);
 
 		// If there are multiple handles to be set run the setting
 		// mechanism twice for the first handle, to make sure it
 		// can be bounced of the second one properly.
-		for ( i = 0; i < count; i += 1 ) {
+		for ( i = 0; i < passesIncludingLimitingPass; i += 1 ) {
+			var isLimitingPass = i>basePasses;
 
-			trigger = i%2;
+			trigger = i%values.length;
+			trigger = isLimitingPass&&options.dir ? values.length-1-trigger : trigger;
 
 			// Get the current argument from the array.
 			to = values[trigger];
@@ -1640,7 +1656,7 @@ function closure ( target, options ){
 
 				// Request an update for all links if the value was invalid.
 				// Do so too if setting the handle fails.
-				if ( to === false || isNaN(to) || setHandle( scope_Handles[trigger], scope_Spectrum.toStepping( to ), i === (3 - options.dir) ) === false ) {
+				if ( to === false || isNaN(to) || setHandle( scope_Handles[trigger], scope_Spectrum.toStepping( to ), isLimitingPass) === false ) {
 					fireEvent('update', trigger);
 				}
 			}
@@ -1650,7 +1666,7 @@ function closure ( target, options ){
 	// Set the slider value.
 	function valueSet ( input ) {
 
-		var count, values = asArray( input ), i;
+		var values = asArray( input ), i;
 
 		// The RTL settings is implemented by reversing the front-end,
 		// internal mechanisms are the same.
@@ -1664,18 +1680,15 @@ function closure ( target, options ){
 			addClassFor( scope_Target, cssClasses[14], 300 );
 		}
 
-		// Determine how often to set the handles.
-		count = scope_Handles.length > 1 ? 3 : 1;
-
-		if ( values.length === 1 ) {
-			count = 1;
-		}
-
-		setValues ( count, values );
+		setValues ( values );
 
 		// Fire the 'set' event for both handles.
 		for ( i = 0; i < scope_Handles.length; i++ ) {
-			fireEvent('set', i);
+
+			// Fire the event only for handles that received a new value, as per #579
+			if ( values[i] !== null ) {
+				fireEvent('set', i);
+			}
 		}
 	}
 
@@ -1694,12 +1707,24 @@ function closure ( target, options ){
 
 	// Removes classes from the root and empties it.
 	function destroy ( ) {
+
 		cssClasses.forEach(function(cls){
 			if ( !cls ) { return; } // Ignore empty classes
 			removeClass(scope_Target, cls);
 		});
-		scope_Target.innerHTML = '';
+
+		while (scope_Target.firstChild) {
+			scope_Target.removeChild(scope_Target.firstChild);
+		}
+
 		delete scope_Target.noUiSlider;
+	}
+
+	function topStepOfRangeBelow(nearbySteps) {
+		var numStepsInRangeBelow = (nearbySteps.thisStep.xVal-nearbySteps.stepBefore.xVal)/nearbySteps.stepBefore.xNumSteps,
+		highestCompleteStep = Math.ceil(Number(numStepsInRangeBelow.toFixed(3))-1),
+		stepBelow = nearbySteps.stepBefore.xVal + nearbySteps.stepBefore.xNumSteps*highestCompleteStep;
+		return stepBelow;
 	}
 
 	// Get the current step size for the slider.
@@ -1709,32 +1734,46 @@ function closure ( target, options ){
 		// Get the step point, then find it in the input list.
 		var retour = scope_Locations.map(function( location, index ){
 
-			var step = scope_Spectrum.getApplicableStep( location ),
+			var nearbySteps = scope_Spectrum.getNearbySteps( location ),
+			// As per #391, the comparison for the decrement step can have some rounding issues.
+			stepDecimals = scope_Spectrum.countStepDecimals(),
+			// Get the current numeric value
+			value = scope_Values[index];
 
-				// As per #391, the comparison for the decrement step can have some rounding issues.
-				// Round the value to the precision used in the step.
-				stepDecimals = countDecimals(String(step[2])),
-
-				// Get the current numeric value
-				value = scope_Values[index],
-
-				// To move the slider 'one step up', the current step value needs to be added.
-				// Use null if we are at the maximum slider value.
-				increment = location === 100 ? null : step[2],
-
-				// Going 'one step down' might put the slider in a different sub-range, so we
-				// need to switch between the current or the previous step.
-				prev = Number((value - step[2]).toFixed(stepDecimals)),
-
-				// If the value fits the step, return the current step value. Otherwise, use the
-				// previous step. Return null if the slider is at its minimum value.
-				decrement = location === 0 ? null : (prev >= step[1]) ? step[2] : (step[0] || false);
+			var increment, decrement;
+			if (location == 100) {
+				increment = null;
+				decrement = value-topStepOfRangeBelow(nearbySteps);
+				decrement = Number(decrement.toFixed(stepDecimals)); // Round per #391
+			} else if (location === 0) {
+				increment = nearbySteps.thisStep.xNumSteps;
+				decrement = null;
+			} else {
+				increment = nearbySteps.thisStep.xNumSteps;
+				if (increment !== false) {
+					if (value+increment>nearbySteps.stepAfter.xVal) {
+						increment = nearbySteps.stepAfter.xVal-value;
+					}
+					increment = Number(increment.toFixed(stepDecimals));
+				}
+				if (value>nearbySteps.thisStep.xVal) {
+					decrement = nearbySteps.thisStep.xNumSteps;
+				} else if (nearbySteps.stepBefore.xNumSteps === false) {
+					decrement = false;
+				} else {
+					decrement = value-topStepOfRangeBelow(nearbySteps);
+					decrement = Number(decrement.toFixed(stepDecimals)); // Round per #391
+				}
+			}
 
 			return [decrement, increment];
 		});
 
 		// Return values in the proper order.
-		return inSliderOrder( retour );
+		if ( options.dir ) {
+			retour = retour.reverse();
+		}
+		return retour;
 	}
 
 	// Attach an event to this slider, possibly including a namespace
@@ -1768,7 +1807,9 @@ function closure ( target, options ){
 	}
 
 	// Updateable: margin, limit, step, range, animate, snap
-	function updateOptions ( optionsToUpdate ) {
+	function updateOptions ( optionsToUpdate, dontInvalidate) {
+
+		console.error('updateOptions');
 
 		var v = valueGet(), i, newOptions = testOptions({
 			start: [0, 0],
@@ -1786,15 +1827,24 @@ function closure ( target, options ){
 			}
 		});
 
+		// Save current spectrum direction as testOptions in testRange call
+		// doesn't rely on current direction
+		newOptions.spectrum.direction = scope_Spectrum.direction;
 		scope_Spectrum = newOptions.spectrum;
 
-		// Invalidate the current positioning so valueSet forces an update.
-		scope_Locations = [-1, -1];
-		valueSet(v);
+		// don't fire update
+		if (!dontInvalidate) {
 
-		for ( i = 0; i < scope_Handles.length; i++ ) {
-			fireEvent('update', i);
+			// Invalidate the current positioning so valueSet forces an update.
+			scope_Locations = [];
+			valueSet(v);
+
+			for ( i = 0; i < scope_Handles.length; i++ ) {
+				fireEvent('update', i);
+			}
+
 		}
+
 	}
 
 
@@ -1826,7 +1876,10 @@ function closure ( target, options ){
 		off: removeEvent,
 		get: valueGet,
 		set: valueSet,
-		updateOptions: updateOptions
+		updateOptions: updateOptions,
+		options: options, // Issue #600
+		target: scope_Target, // Issue #597
+		pips: pips // Issue #594
 	};
 
 	// Attach user events.

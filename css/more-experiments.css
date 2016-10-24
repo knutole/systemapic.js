@@ -1,0 +1,39 @@
+
+/*graph styling experiement*/
+/*.big-graph-outer-container {
+    background: rgba(255, 255, 255, 0.14);
+    color: white;
+    padding-bottom: 40px;
+}
+.big-graph-info-container {
+    width: auto;
+    margin: auto;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+    padding: 5px;
+    max-width: 300px;
+}
+
+.big-graph-title {
+    font-size: 20px;
+    font-weight: 600;
+    text-decoration: none;
+}
+.big-graph-current-day {
+    font-size: 16px;
+}
+
+.big-slider-button-container {
+    color: rgba(255, 255, 255, 0.78);
+}
+
+.big-slider-inner-container {
+    top: -30px;
+    background: rgba(0, 0, 0, 0);
+}
+
+.big-slider-play-button:hover, .big-slider-step-forward:hover, .big-slider-tap-forward:hover, .big-slider-step-backward:hover, .big-slider-tap-backward:hover {
+    color: white;
+}
+
+*/

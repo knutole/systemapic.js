@@ -63,12 +63,18 @@ Wu.Pane.Account = Wu.Pane.extend({
 			this._accountDropdown = Wu.DomUtil.create('div', 'share-dropdown account-dropdown', app._appPane);
 			var account_name = app.Account.getUsername();
 
+			// locate me
+			this._locate = Wu.DomUtil.create('div', 'share-item locate-me', this._accountDropdown, '<i class="fa fa-location-arrow" aria-hidden="true"></i> Locate me!');
+
 			// items
 			this._accountName = Wu.DomUtil.create('div', 'share-item no-hover', this._accountDropdown, '<i class="fa fa-user logout-icon"></i>' + account_name);
 			this._logoutDiv = Wu.DomUtil.create('div', 'share-item', this._accountDropdown, '<i class="fa fa-sign-out logout-icon"></i>Log out');
 
+			
 			// events
 			Wu.DomEvent.on(this._logoutDiv,  'click', this.logout, this);
+
+			Wu.DomEvent.on(this._locate, 'click', this._toggleLocate, this);
 
 		}
 		
@@ -79,6 +85,99 @@ Wu.Pane.Account = Wu.Pane.extend({
 		Wu.DomUtil.addClass(this._accountTab, 'active');
 
 	},
+
+	_toggleLocate : function () {
+
+		// already locating, stop it
+		if (this._locating) {
+
+			// set text
+			this._locate.innerHTML = '<i class="fa fa-location-arrow" aria-hidden="true"></i> Locate me!';
+
+			// stop
+			this.stopLocating();
+
+		// locate!
+		} else {
+
+			// start locating
+			this.startLocating();
+
+			// set text
+			this._locate.innerHTML = '<i class="fa fa-location-arrow" aria-hidden="true"></i> Stop locating...';
+		}
+
+	},
+
+	startLocating : function () {
+		var map = app._map;
+
+		console.log('startLocating', this);
+
+
+		// locate with leaflet
+		map.locate({
+			watch : true, // continuous
+			setView : true,
+			enableHighAccuracy : true
+		});
+
+		// add events
+		map.on('locationfound', this._onLocationFound.bind(this));
+		map.on('locationerror', this._onLocationError.bind(this));
+
+		// mark
+		this._locating = true;
+	},
+
+	stopLocating : function () {
+		var map = app._map;
+		console.log('stopLocate', this);
+		
+		// stop locating
+		map.stopLocate();
+
+		// remove events
+		map.off('locationerror', this._onLocationError.bind(this));
+		map.off('locationfound', this._onLocationFound.bind(this));
+		
+		// remove circle
+		if (this._locationRadius && map.hasLayer(this._locationRadius)) {
+	 		map.removeLayer(this._locationRadius);
+	 	}
+
+	 	// mark
+		this._locating = false;
+	},
+
+	_onLocationFound : function (e) {
+		var radius = e.accuracy / 2;
+		var map = app._map;
+
+		console.log('_onLocationFound', this);
+
+		// remove circle if exists
+	 	if (this._locationRadius && map.hasLayer(this._locationRadius)) {
+	 		map.removeLayer(this._locationRadius);
+	 	}
+
+	 	// draw radius circle
+	    this._locationRadius = L.circle(e.latlng, {
+	    	radius : radius,
+	    	fillColor : 'gray',
+	    	interactive : false,
+	    	opacity : 0.8
+	    });
+
+	    // add to map
+	    this._locationRadius.addTo(map);
+	},
+
+	_onLocationError : function (e) {
+
+	},
+
+
 
 	_closeAccountTab : function () {
 		if (!this._accountTabOpen) return;

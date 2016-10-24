@@ -198,8 +198,6 @@ Wu.Controller = Wu.Class.extend({
 	openDefaultProject : function () {
 		var defaultProject = app.options.defaults.project.name;
 
-		console.log('openDefaultProject', app.hotlink);
-
 		// open last updated (if exists)
 		var opened = app.Controller.openLastUpdatedProject();
 		if (opened) return; 

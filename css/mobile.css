@@ -13,7 +13,7 @@
 .chrome-button.chrome-client-logo,
 .chrome-button.chrome-project-title,
 .cpu-wrapper,
-.chrome-menu-button,
+/*.chrome-menu-button,*/
 .chrome-button.share,
 .leaflet-control-mouseposition.leaflet-control,
 .leaflet-bottom.leaflet-left,
@@ -23,9 +23,9 @@
 .c3-footer-dates,
 .chrome-button.layer.rounded-layer-button .layer-button-text,
 .leaflet-draw.leaflet-control,
-
 .leaflet-control-search.leaflet-control,
-.leaflet-control-baselayertoggle.leaflet-control {
+.leaflet-control-baselayertoggle.leaflet-control,
+.chrome-left-new-button {
 	display: none !important;
 	}
 
@@ -47,6 +47,7 @@
 	font-size: 21px;
 	background-color: white;
 	color: #3F4652 !important;
+	top: 8px;
 	}
 
 .leaflet-top.leaflet-left {
@@ -54,7 +55,10 @@
     	margin-left: 0px;
     	left: 0px;
     	top: -4px;
-    	zoom: 1.2;	
+    	zoom: 1.2;
+
+    	top: 43px;
+    	left: 3px;
 	}
 
 .description-control-header-toggle {
@@ -171,9 +175,9 @@
     opacity: 0.5;
 }
 
-.chrome-button.account {
+/*.chrome-button.account {
 	display:  none;
-	}
+	}*/
 
 
 
@@ -218,6 +222,85 @@
 	max-width: 97% !important;
 	min-width: 97% !important;
 }
+
+
+
+
+.chrome-menu-button,
+.chrome-button.account {
+    background: white;
+    color: black;
+    left: 8px;
+    top: 10px;
+    border-radius: 3px;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    text-align: center;
+    font-size: 31px;
+    padding-left: 7px;	
+    color: #3F4652;
+}
+
+
+.chrome-menu-button.active {
+	color: transparent !important;
+	top: 16px;
+	left: 22px;
+	}
+
+.chrome-menu-button.active:before {
+	content: '[close]';
+	color: #3C4759 !important;
+	font-size: 18px;
+}
+
+
+.smooth-fullscreen-inner,
+.smooth-fullscreen-inner.invite {
+	width: auto !important;
+	max-width: 700px !important;
+}
+
+
+.chrome-button.account {
+	padding-left: 1px;	
+	}
+
+.logged-in .chrome-button.account {
+	display: none;
+}
+
+
+.login-wrapper {
+	top: 0;
+}
+
+.login-box {
+	width: auto;
+	max-width: 400px;
+}
+
+.login-buttons-wrapper {
+	text-align: center;
+	}
+
+.smooth-fullscreen-save {
+	display: inline-block;
+	vertical-align: top;
+	position: relative;
+	margin-right: 20px;
+	}	
+
+.smooth-fullscreen-save.invite.cancel {
+	margin-left: auto !important;
+}	
+
+
+.login-forgot-link {
+	display: block;
+}
+
 
 
 

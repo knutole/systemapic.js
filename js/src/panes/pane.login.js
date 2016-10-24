@@ -1,6 +1,6 @@
 Wu.Pane.Login = Wu.Pane.extend({
 
-	_description : 'Log in',
+	_description : 'Sign in to Mapic',
 	
 	setDescription : function (text) {
 		this._description = text;
@@ -16,11 +16,14 @@ Wu.Pane.Login = Wu.Pane.extend({
 		this._login_wrapper = Wu.DomUtil.create('div', 'login-wrapper', this._loginFullscreen);
 		this._login_box = Wu.DomUtil.create('div', 'login-box', this._login_wrapper);
 
-		// logo
+		// colors from login
+		this._login_box.style.backgroundColor = app.options.logos.loginLogo.backgroundColor;
+		this._login_box.style.color = app.options.logos.loginLogo.color;
+
+		// logos
 		this._createLogo();
 
 		// login content wrapper
-
 		this._loginInner = Wu.DomUtil.create('div', 'login-inner', this._login_box);
 		this._forgotInner = Wu.DomUtil.create('div', 'login-forgot-inner', this._login_box);
 
@@ -136,7 +139,7 @@ Wu.Pane.Login = Wu.Pane.extend({
 
 	addEvents : function () {
 		// add events
-		Wu.DomEvent.on(this._loginFullscreen, 'click', this.close, this);
+		// Wu.DomEvent.on(this._loginFullscreen, 'click', this.close, this);
 		Wu.DomEvent.on(this._login_box, 'click', Wu.DomEvent.stop, this);
 		Wu.DomEvent.on(this._loginBtn, 'click', this._doLogin, this);
 		Wu.DomEvent.on(this._cancelBtn, 'click', this.close, this);
@@ -147,7 +150,7 @@ Wu.Pane.Login = Wu.Pane.extend({
 
 	removeEvents : function () {
 		// remove events
-		Wu.DomEvent.off(this._loginFullscreen, 'click', this.close, this);
+		// Wu.DomEvent.off(this._loginFullscreen, 'click', this.close, this);
 		Wu.DomEvent.off(this._login_box, 'click', Wu.DomEvent.stop, this);
 		Wu.DomEvent.off(this._loginBtn, 'click', this._doLogin, this);
 		Wu.DomEvent.off(this._cancelBtn, 'click', this.close, this);

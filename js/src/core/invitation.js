@@ -491,7 +491,7 @@ Wu.Invite = Wu.Class.extend({
 		if (!_.isEmpty(options)) {
 			_.forOwn(options, function (value, key) {
 				// encode and add
-				url += _.contains(url, '?') ? '&' : '?';
+				url += _.includes(url, '?') ? '&' : '?';
 				url += encodeURIComponent(key) + '=' + encodeURIComponent(value);
 			});
 		}

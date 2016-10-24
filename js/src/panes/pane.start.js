@@ -298,9 +298,6 @@ Wu.StartPane = Wu.Pane.extend({
 		// // Hide the Start Pane
 		this.deactivate();
 
-		// // Google Analytics event trackign
-		// app.Analytics.setGaPageview(project.getUuid());
-
 	},
 
 
@@ -517,8 +514,6 @@ Wu.StartPane = Wu.Pane.extend({
 
 		project._saveNew(options);
 
-		// Google Analytics event tracking
-		app.Analytics.setGaEvent(['Start Pane', 'Clients: new project']);	
 		this.deactivate();
 	},
 

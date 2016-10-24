@@ -1,18 +1,16 @@
-Wu.version = '1.4.0';
+Wu.version = '1.6.0';
 Wu.App = Wu.Class.extend({
 	_ : 'app',
 
 	// default options
 	options : systemapicConfigOptions, // global var from config.js... perhaps refactor.
-
 	language : language,
-
 	_ready : false,
 
 	initialize : function (options) {
 
 		// print version
-		console.log('Systemapic v.' + Wu.version);
+		console.log('Mapic v.' + Wu.version);
 
 		// set global app
 		window.app = Wu.app = this; // todo: remove Wu.app, use only window.app
@@ -23,14 +21,26 @@ Wu.App = Wu.Class.extend({
 		// init api
 		app.api = new Wu.Api({});
 
+		// analytics
+		app.analytics = new Wu.Analytics();
+
 		// auth
 		app.api.auth(app.authed);
+		
+	},
+
+	raven : function () {
+
+		// error handling
+		Raven.config('https://594a4e7cc65f4e39bdd0337276e391b5@sentry.io/100809').install();
+
+		Raven.setRelease(Wu.version);
 	},
 
 	authed : function (err, access_token) {
 
 		// catch err
-		if (err) return console.error('Something went horribly wrong: ', err);
+		if (err) return console.error('Something went wrong: ', err);
 
 		// set access_token
 		app.tokens = Wu.parse(access_token);
@@ -147,8 +157,7 @@ Wu.App = Wu.Class.extend({
 		// select project
 		Wu.Mixin.Events.fire('appReady');
 
-		// analytics
-		app.Analytics = new Wu.Analytics();
+		
 
 		// init sniffers
 		app._initSniffers();
@@ -156,6 +165,15 @@ Wu.App = Wu.Class.extend({
 		// log entry
 		app._logEntry();
 
+		// force login
+		app._forceLogin();
+
+	},
+
+	_forceLogin : function () {
+		if (app.options.force_login && app.Account.isPublic()) {
+			this._login('Welcome! Please log in.');
+		}
 	},
 
 	_logEntry : function () {
@@ -164,11 +182,12 @@ Wu.App = Wu.Class.extend({
 		var browser = b.fullName + ' ' + b.majorVersion + '.' + b.minorVersion;
 		var os = o.fullName + ' ' + o.majorVersion + '.' + o.minorVersion;
 
-		app.Socket.sendUserEvent({
-		    	user : app.Account.getFullName(),
-		    	event : 'entered',
-		    	description : 'the wu: `' + browser + '` on `' + os + '`',
-		    	timestamp : Date.now()
+		app.log('login', {
+		    	info : {
+		    		browser : browser,
+		    		os : os
+		    	},
+		    	category : 'Users'
 		});
 	},
 
@@ -246,10 +265,12 @@ Wu.App = Wu.Class.extend({
 		// share pane
 		app.Share = new Wu.Share();
 
-		// big slider
-		app.BigSlider = new Wu.BigSlider({ // refactor to project controls
-			data : 'allYears'
-		});
+		// // big slider
+		// app.Animator = new Wu.Animator({ // refactor to project controls
+		// 	// data : 'allYears',
+		// 	data : 'scf.average.2000.2015', // todo: refactor data fetching
+		// 	hide : true
+		// });
 
 		// add account tab
 		app.AccountPane = new Wu.Pane.Account();
@@ -264,7 +285,9 @@ Wu.App = Wu.Class.extend({
 	_initView : function () {
 			
 		// runs hotlink
-		if (app._initHotlink()) return;
+		if (app._initHotlink()) {
+			return;
+		} 
 
 		// open first project (ordered by lastUpdated)
 		app.Controller.openDefaultProject();
@@ -301,6 +324,7 @@ Wu.App = Wu.Class.extend({
 			app._setProject(project);
 			return true;
 		}
+
 		// request project from server
 		app.api.getProject({
 			username : app.hotlink.username,
@@ -409,17 +433,44 @@ Wu.App = Wu.Class.extend({
 		app.isMobile = Wu.Util.isMobile();
 
 		if (app.isMobile) {
-			var device = app.isMobile.mobile ? 'mobile' : 'tablet';
 
-			// load stylesheet
-			app.Controller.loadjscssfile('/css/' + device + '.css', 'css');
+			// Set size	
+			this.setMobileSize();
 
-			// set width of map
-			var width = app.isMobile.width;
-			app._map._container.style.width = width + 'px';
+			// Listen to the wind blow
+			this.mobileListners();
 		}
 
 	},
+
+	mobileListners : function () {
+
+		Wu.DomEvent.on(window, 'resize', this.setMobileSize, this);
+
+	},
+
+
+	setMobileSize : function () {
+
+		// Check landscape or portrait format
+		var portrait = window.innerHeight > window.innerWidth;
+
+		// Get width
+		var width  = portrait ? app.isMobile.width : app.isMobile.height;
+		var height = portrait ? app.isMobile.height : app.isMobile.width;
+
+		// Check device type
+		var device = app.isMobile.mobile ? 'mobile' : 'tablet';
+
+		// load stylesheet
+		app.Controller.loadjscssfile('/css/' + device + '.css', 'css');
+
+		// set width of map
+		app._map._container.style.width = width + 'px';
+		// app._map._container.style.height = height + 'px';
+
+	},
+
 
 	debug : function () {
 

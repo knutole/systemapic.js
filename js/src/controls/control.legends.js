@@ -49,7 +49,7 @@ L.Control.Legends = Wu.Control.extend({
 	addHooks : function () {
 
 		Wu.DomEvent.on(this._legendsCollapser, 'click', this.closeLegends, this);
-		Wu.DomEvent.on(this._legendsOpener, 'click', this._GAtoggleOpen, this);
+		Wu.DomEvent.on(this._legendsOpener, 'click', this.toggleOpen, this);
 
 		// prevent map scrollzoom (OOOBS! BLOCKS ALL SCROLLING)
 		Wu.DomEvent.on(this._container, 'mousewheel', Wu.DomEvent.stop, this);
@@ -86,18 +86,12 @@ L.Control.Legends = Wu.Control.extend({
 
 		// get control active setting from project
 		var active = this._project.getControls()[this.type];
-		
+
 		// if not active in project, hide
 		if (!active) return this._hide();
 
 		// remove old content
 		this._flush();
-
-		// add new content
-		// this._initContent();
-
-		// add already active layers
-		// this.refreshLegends();
 
 		// show
 		!hide && this._show();
@@ -217,13 +211,6 @@ L.Control.Legends = Wu.Control.extend({
 		this._legendsScrollRight.style.display = 'none';
 	},
 
-	_GAtoggleOpen : function (e) {
-
-		// Google Analytics event tracking
-		app.Analytics.setGaEvent(['Controls', 'Legends: toggle open']);
-
-		this.toggleOpen(e);
-	},
 
 	// Needed for Mobile phones
 	toggleOpen : function(e) {
@@ -235,8 +222,6 @@ L.Control.Legends = Wu.Control.extend({
 			// Open / Close Legends for mobile phones
 			this._isOpen ? this.mobileCloseLegends() : this.mobileOpenLegends();
 		}
-
-
 	},
 
 	mobileCloseLegends : function(e) {
@@ -286,8 +271,6 @@ L.Control.Legends = Wu.Control.extend({
 
 		// Hide the little arrow button         
 		if (!app.mobile) this._legendsOpener.style.opacity = '0';
-
-		// opopopopopopopopopop
 
 		// Set the width of the Legends
 		this._legendsInner.style.width = this.sliderWidth + 'px';
@@ -545,7 +528,6 @@ L.Control.Legends = Wu.Control.extend({
 		this.sliderWidth -= legend.width; 
 
 	},
-
 
 	legendsScrollLeft : function () {
 

@@ -42,8 +42,57 @@
 Wu.Analytics = Wu.Class.extend({
 
 	initialize : function () {
-		this._listen();
+		// this._listen();
+
+		// create shortcut
+		app.log = this.fire;
+
+		// initialize google analytics
+		ga('create', app.options.ga.id, 'auto');
+		ga('send', 'pageview');
 	},
+
+
+
+
+
+
+	fire : function (event, options) {
+		console.log('Analytics: ', event, options);
+
+
+		var data = {
+			event : event,
+			timestamp : Date.now(),
+			user_id : app.Account.getUuid(),
+			user_name : app.Account.getUsername(),
+			options : options
+		}
+
+		ga('send', {
+			hitType: 'event',
+			eventAction: event,
+			eventCategory: options.category,
+			// eventLabel: 'Fall Campaign',
+
+		});
+
+
+		app.Socket.analytics(data);
+
+	},
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 	_listen : function () {
@@ -78,7 +127,7 @@ Wu.Analytics = Wu.Class.extend({
 	_layerEnabled 	 	: function () {},
 	_layerDisabled 	 	: function () {},
 	_updateView 	 	: function () {},
-	_refresh 	 	: function () {},
+	_refresh 	 		: function () {},
 	_onFileImported  	: function () {},
 	_onFileDeleted   	: function () {},
 	_onLayerAdded    	: function () {},

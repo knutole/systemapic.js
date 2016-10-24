@@ -173,6 +173,10 @@ Wu.MapSettingsPane = Wu.Pane.extend({
 				enable : true,
 				name   : 'Baselayer toggle'
 			},
+			wms : {
+				enable : true,
+				name   : 'WMS toggle'
+			},
 
 			// Inactive
 			layermenu : {

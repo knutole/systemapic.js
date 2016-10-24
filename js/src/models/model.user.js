@@ -5,8 +5,6 @@ Wu.User = Wu.Class.extend({
 		// set vars
 		this.store = store;
 
-		this.lastSaved = _.cloneDeep(store);
-
 		// init file objects
 		this.initFiles();
 
@@ -38,7 +36,7 @@ Wu.User = Wu.Class.extend({
 		if (!app.Account) return console.error('too early!');
 		if (this.getUuid() == app.Account.getUuid()) return;
 
-		var isContact = _.contains(app.Account.getContactListUuids(), this.getUuid());
+		var isContact = _.includes(app.Account.getContactListUuids(), this.getUuid());
 
 		return isContact;
 	},
@@ -155,37 +153,37 @@ Wu.User = Wu.Class.extend({
 	// set functions
 	setLastName : function (value) {
 		this.store.lastName = value;
-		this.save();
+		this.save('lastName');
 	},
 
 	setFirstName : function (value) {
 		this.store.firstName = value;
-		this.save();
+		this.save('firstName');
 	},
 
 	setCompany : function (value) {
 		this.store.company = value;
-		this.save();
+		this.save('company');
 	},
 
 	setPosition : function (value) {
 		this.store.position = value;
-		this.save();
+		this.save('position');
 	},
 
 	setPhone : function (value) {
 		this.store.phone = value;
-		this.save();
+		this.save('phone');
 	},
 
 	setMobile : function (value) {
 		this.store.mobile = value;
-		this.save();
+		this.save('mobile');
 	},
 
 	setEmail : function (value) {
 		this.store.local.email = value;
-		this.save();
+		this.save('local.email');
 	},
 
 
@@ -202,23 +200,31 @@ Wu.User = Wu.Class.extend({
 
 	// save 
 	save : function (key) {
-		
-		// clear timer
-		if (this._saveTimer) clearTimeout(this._saveTimer);
 
-		// save changes on timeout
-		var that = this;
-		this._saveTimer = setTimeout(function () {
+		// set fields
+		var json = {};
+		json[field] = this.store[field];
+		json.uuid = this.store.uuid;
+
+		// save to server
+		this._save(json);
 		
-			// find changes
-			var changes = that._findChanges();
+		// // clear timer
+		// if (this._saveTimer) clearTimeout(this._saveTimer);
+
+		// // save changes on timeout
+		// var that = this;
+		// this._saveTimer = setTimeout(function () {
+		
+		// 	// find changes
+		// 	var changes = that._findChanges();
 			
-			// return if no changes
-			if (!changes) return;
+		// 	// return if no changes
+		// 	if (!changes) return;
 
-			that._save(changes);
+		// 	that._save(changes);
 		
-		}, 1000);       // don't save more than every goddamed second
+		// }, 1000);       // don't save more than every goddamed second
 
 	},
 
@@ -361,11 +367,15 @@ Wu.User = Wu.Class.extend({
 	_logout : function () {
 		
 		// slack monitor
-		app.Socket.sendUserEvent({
-		    	user : app.Account.getFullName(),
-		    	event : 'logged out.',
-		    	description : '',
-		    	timestamp : Date.now()
+		// app.Socket.sendUserEvent({
+		//     	user : app.Account.getFullName(),
+		//     	event : 'logged out.',
+		//     	description : '',
+		//     	timestamp : Date.now()
+		// });
+
+		app.log('logout', {
+			category : 'Users'
 		});
 
 		// redirect to logout
@@ -373,7 +383,8 @@ Wu.User = Wu.Class.extend({
 	},
 
 	isSuper : function () {
-		return this.store.access.account_type == 'super';
+		return this.store.access.super;
+		// return this.store.access.account_type == 'super';
 	}
 
 });

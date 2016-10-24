@@ -21,6 +21,15 @@ Wu.Chrome.SettingsContent = Wu.Chrome.extend({
 
 		Wu.Mixin.Events.on('layerSelected', this._refreshTab, this);
 
+		// _addHooks : function () {
+
+		// 	// fire event
+		// 	Wu.Mixin.Events.fire('layerEnabled', { detail : {
+		// 		layer : layer
+		// 	}});
+
+		// },	
+
 	},
 
 	_refreshTab : function (e) {
@@ -31,9 +40,7 @@ Wu.Chrome.SettingsContent = Wu.Chrome.extend({
 		this._storeActiveLayerUuid(uuid);
 
 		// refresh
-		if ( this.showing ) this.show();
-		
-		
+		if ( this.showing ) this.show();		
 		
 	},
 
@@ -55,6 +62,7 @@ Wu.Chrome.SettingsContent = Wu.Chrome.extend({
 	},
 
 	show : function () {
+
 		if (!this._inited) this._initLayout();
 
 		this.showing = true;		
@@ -145,7 +153,7 @@ Wu.Chrome.SettingsContent = Wu.Chrome.extend({
 			appendTo: selectWrap,
 			content: sortedLayers,
 			project: this._project,
-			placeholder: subtitle
+			placeholder: subtitle,
 		});
 
 		return this._stylerDropDown;

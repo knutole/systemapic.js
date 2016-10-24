@@ -30,6 +30,8 @@ Wu.Chrome.SettingsContent.Styler = Wu.Chrome.SettingsContent.extend({
 		app.Tools.Styler = this;
 	},
 
+
+
 	_initContainer : function () {
 
 		// Create container
@@ -66,10 +68,13 @@ Wu.Chrome.SettingsContent.Styler = Wu.Chrome.SettingsContent.extend({
 
 		// Mark inited
 		this._inited = true;
+
+
 	},
 
 
-	_initStyle : function () {
+
+	_initVectorStyler : function () {
 
 		// Get layer meta
 		this.getLayerMeta();
@@ -82,31 +87,64 @@ Wu.Chrome.SettingsContent.Styler = Wu.Chrome.SettingsContent.extend({
 
 		// Init legend options
 		this._initLegendOptions();
-
 	},
+
+	_initCubeStyler : function () {
+
+		this._carto = this._layer.getStyleJSON();
+
+		var options = {
+			carto 	  : this._carto,
+			layer 	  : this._layer,
+			project   : this._project,
+			styler 	  : this,
+			meta 	  : this._meta,
+			columns   : this._columns,
+			container : this._fieldsWrapper,
+			rangeMin  : 0,
+			rangeMax  : 255
+		};
+
+		this._rasterStyler = new Wu.RasterStyler(options);
+	},
+
+	_initRasterStyler : function () {
+
+		this._carto = this._layer.getStyleJSON();
+
+		var options = {
+			carto 	  : this._carto,
+			layer 	  : this._layer,
+			project   : this._project,
+			styler 	  : this,
+			meta 	  : this._meta,
+			columns   : this._columns,
+			container : this._fieldsWrapper,
+			rangeMin  : 0,
+			rangeMax  : 255
+		};
+
+		this._rasterStyler = new Wu.RasterStyler(options);
+	},
+
 
 	_initStylingOptions : function () {
 
 		var options = {
-			carto 	: this._carto,
-			layer 	: this._layer,
-			project : this._project,
-			styler 	: this,
-			meta 	: this._meta,
-			columns : this._columns,
-			container : this._fieldsWrapper
+			carto 	  : this._carto,
+			layer 	  : this._layer,
+			project   : this._project,
+			styler 	  : this,
+			meta 	  : this._meta,
+			columns   : this._columns,
+			container : this._fieldsWrapper,
+			// type      : this._layer.getMeta().geometry_type
 		};
 
-
-		// create point styler
+		// create stylers
 		this._pointStyler = new Wu.Styler.Point(options);
-
-		// create polygon styler
 		this._polygonStyler = new Wu.Styler.Polygon(options);
-
-		// create line styler
 		this._lineStyler = new Wu.Styler.Line(options);
-
 	},
 
 	_initLegendOptions : function () {
@@ -119,7 +157,6 @@ Wu.Chrome.SettingsContent.Styler = Wu.Chrome.SettingsContent.extend({
 		};
 
 		this._legendStyler = new Wu.Legend(legendOptions);
-
 
 		Wu.DomUtil.removeClass(this._legendStyler._legensOuter, 'displayNone');		
 	},
@@ -188,13 +225,12 @@ Wu.Chrome.SettingsContent.Styler = Wu.Chrome.SettingsContent.extend({
 		}.bind(this));
 
 
-		if (error) return;
+		if (error) return console.error(error);
 		
 		// save
 		this._saveTemplate(val);
 
 	},
-
 
 	// Save template error message
 	_templateSaveError : function (message) {
@@ -211,14 +247,12 @@ Wu.Chrome.SettingsContent.Styler = Wu.Chrome.SettingsContent.extend({
 		this.saveStyleTemplate(name);
 	},
 
-	// *************************************************************** //
-	// * TEMPLATES TEMPLATES TEMPLATES TEMPLATES TEMPLATES TEMPLATES * // 
-	// *************************************************************** //
-
 	_initTemplates : function () {	
 
+		// refresh
 		this._refreshTemplates();
 
+		// if no templates, return
 		if ( this.templates.length < 1 ) return;
 
 		// create dropdown
@@ -234,6 +268,7 @@ Wu.Chrome.SettingsContent.Styler = Wu.Chrome.SettingsContent.extend({
 		// fill select options
 		this.templates.forEach(function (template) {
 
+			// create option
 			var option = Wu.DomUtil.create('option', 'active-layer-option', select);
 			option.value = template.uuid;
 			option.innerHTML = template.name;
@@ -243,7 +278,6 @@ Wu.Chrome.SettingsContent.Styler = Wu.Chrome.SettingsContent.extend({
 		Wu.DomEvent.on(select, 'change', this._selectTemplate, this); // todo: mem leak?
 
 	},
-
 
 	_refreshTemplates : function () {
 
@@ -273,10 +307,7 @@ Wu.Chrome.SettingsContent.Styler = Wu.Chrome.SettingsContent.extend({
 
 		var selected = e.target.value;
 
-		console.log('_selectTemplate', selected);
-
 		this.templates.forEach(function (template) {
-			console.log('tempalte:', template);
 			if ( template.uuid == selected ) {
 				this._carto = template.carto;
 				this._legend = template.legend;
@@ -285,9 +316,9 @@ Wu.Chrome.SettingsContent.Styler = Wu.Chrome.SettingsContent.extend({
 
 		this._updateStyle(true);
 
-		this._pointStyler._refresh();
-		this._lineStyler._refresh();
-		this._polygonStyler._refresh();		
+		this._pointStyler && this._pointStyler._refresh();
+		this._lineStyler && this._lineStyler._refresh();
+		this._polygonStyler && this._polygonStyler._refresh();		
 
 	},
 
@@ -316,7 +347,6 @@ Wu.Chrome.SettingsContent.Styler = Wu.Chrome.SettingsContent.extend({
 
 	},
 
-
 	// Marks button to changed state
 	markChanged : function () {
 		Wu.DomUtil.addClass(this._updateStyleButton, 'marked-changed');
@@ -329,27 +359,105 @@ Wu.Chrome.SettingsContent.Styler = Wu.Chrome.SettingsContent.extend({
 
 	// Update style
 	_updateStyle : function (newLegend) {
+		if (this._layer.isCube())   return this._updateCube();
+		if (this._layer.isVector()) return this._updateVector(newLegend);
+		if (this._layer.isRaster()) return this._updateRaster();
+		console.error('invalid data type');
+	},
 
-		console.log('update_style');
+	_updateRaster : function () {
+
+		// get vars
+		var layer = this._layer;
+		var file_id = layer.getFileUuid();
+		var sql = '(SELECT * FROM ' + file_id + ') as sub';	
+
+		// Get styleJSON
+		var styleJSON = this._rasterStyler.styleJSON;
+
+		// get stops
+		var stops = styleJSON.stops;
+
+		// convert stops to css
+		var styleCSS = this._rasterStyler.stops2cartocss(stops);
+
+		// get layer.store.data
+		var layerData = layer.getData();
+		
+		// set new cartocss
+		layerData.cartocss = styleCSS;
+
+		// remove old layer_id
+		delete layerData.layer_id; 
+
+		// create layer on server
+		app.api.createTileLayer(layerData, function (err, newLayerJSON) {
+			if (err) return app.feedback.setError({
+				title : 'Something went wrong',
+				description : err
+			});
+
+			// new layer
+			var newLayerStyle = Wu.parse(newLayerJSON);
+
+			// catch errors
+			if (newLayerStyle.error) return console.error(newLayerStyle.error);
+
+			// update layer with new store.data
+			layer.updateStyle(newLayerStyle);
+
+			// save styleJSON to layer.style
+			layer.setStyling(styleJSON);
+
+		}.bind(this));
+	},
+
+	_updateVector : function (newLegend) {
 
 		// Update point
-		this._pointStyler.setCarto(this._carto.point);
-		this._pointStyler.updateStyle();
+		if (this._pointStyler) {
+			this._pointStyler.setCarto(this._carto.point);
+			this._pointStyler.updateStyle();
+		}
 
 		// Update point
-		this._lineStyler.setCarto(this._carto.line);
-		this._lineStyler.updateStyle();
+		if (this._lineStyler) {
+			this._lineStyler.setCarto(this._carto.line);
+			this._lineStyler.updateStyle();
+		}
 
 		// Update point
-		this._polygonStyler.setCarto(this._carto.polygon);
-		this._polygonStyler.updateStyle();
+		if (this._polygonStyler) {
+			this._polygonStyler.setCarto(this._carto.polygon);
+			this._polygonStyler.updateStyle();
+		}
 
-		var refresh = newLegend ? this._legend : false;
-		this._legendStyler.refreshLegend(refresh);
+		// update legend
+		if (this._legendStyler) {
+			var refresh = newLegend ? this._legend : false;
+			this._legendStyler.refreshLegend(refresh);
+		}
 
 		// Unmark changed
 		this.unmarkChanged();
-		
+	},
+
+	_updateCube : function () {
+
+		// Get style JSON
+		var styleJSON = this._rasterStyler.styleJSON;
+
+		// get stops
+		var stops = styleJSON.stops;
+
+		// convert stops to css
+		var styleCSS = this._rasterStyler.stops2cartocss(stops);
+
+		// update pile layer
+		this._layer.updateStyle(styleCSS);
+
+		// save styleJSON to wu layer
+		this._layer.setStyling(styleJSON); // will be stringified in setStyling fn, 
 	},
 
 	_refresh : function () {
@@ -362,6 +470,7 @@ Wu.Chrome.SettingsContent.Styler = Wu.Chrome.SettingsContent.extend({
 	},
 
 	show : function () {
+
 		if (!this._inited) this._initLayout();
 
 		// hide others
@@ -377,13 +486,10 @@ Wu.Chrome.SettingsContent.Styler = Wu.Chrome.SettingsContent.extend({
 		
 		// Enable settings from layer we're working with
 		var layerUuid = this._getActiveLayerUuid();
-		if (layerUuid) this._selectedActiveLayer(false, layerUuid);		
+		if (layerUuid) this._selectedActiveLayer(false, layerUuid);
 
-		// Select layer we're working on
-		var options = this.layerSelector.childNodes;
-		for (var k in options) {
-			if (options[k].value == layerUuid) options[k].selected = true;
-		}
+
+
 	},
 
 	closed : function () {
@@ -391,7 +497,6 @@ Wu.Chrome.SettingsContent.Styler = Wu.Chrome.SettingsContent.extend({
 		// clean up
 		this._tempRemoveLayers();
 	},	
-
 
 	// event run when layer selected 
 	_selectedActiveLayer : function (value, uuid) {
@@ -408,10 +513,8 @@ Wu.Chrome.SettingsContent.Styler = Wu.Chrome.SettingsContent.extend({
 		// get layer
 		this._layer = this._project.getLayer(this.layerUuid);
 
-		console.log('this._layer', this._layer);
-
 		// return if no layer
-		if (!this._layer || !this._layer.isStylable()) return;
+		if (!this._layer || !this._layer.isStyleable()) return;
 
 		// remember layer for other tabs
 		this._storeActiveLayerUuid(this.layerUuid);		
@@ -419,31 +522,41 @@ Wu.Chrome.SettingsContent.Styler = Wu.Chrome.SettingsContent.extend({
 		// get current style, returns default if none
 		var style = this._layer.getStyling();
 
-		console.log('style: ', style);
-
 		// define tab
 		this.tabindex = 1;
 
-		// set local cartoJSON
+		// set local cartoCSS
 		this._carto = style || {};
 
 		// Clear legend objects
 		this.oldLegendObj = false;
 		this.legendObj = false;
 
+
+		// cube styler
 		if (this._layer.isCube()) {
 			
-			// init style json
-			this._initStyle();
-		} else {
+			// init cube styler
+			this._initCubeStyler();
 
-			// add GUI for cube styling here!
-			
+		// vector styler
+		} else if (this._layer.isVector()) {
 
+			// init vector styler
+			this._initVectorStyler();
+
+		// raster styler
+		} else if (this._layer.isRaster()) {
+
+			// init raster styler
+			this._initRasterStyler();
 		}
 
 		// Add temp layer
 		this._tempaddLayer();
+
+		// Set active layer in dropdown
+		this.layerSelector.setFromUuid(uuid);
 
 	},
 
@@ -456,6 +569,13 @@ Wu.Chrome.SettingsContent.Styler = Wu.Chrome.SettingsContent.extend({
 		
 		// Get layermeta
 		var layerMeta = layer.getMeta();
+
+		// // Perhaps not the right place to set this...
+		// for ( var k in layerMeta.columns ) {
+		// 	var min = layerMeta.columns[k].min;
+		// 	var max = layerMeta.columns[k].max;
+		// 	if ( min != max ) layerMeta.columns[k].int = true;
+		// }
 
 		// Get columns
 		this._columns = layerMeta.columns;
@@ -483,14 +603,5 @@ Wu.Chrome.SettingsContent.Styler = Wu.Chrome.SettingsContent.extend({
 		// get carto from server
 		app.api.json2carto(options, callback.bind(this));
 	},
-
-	// UNUSED Function
-	//clearBuggyFiles : function () {
-	//	// Get file ID
-	//	var fileId = this._layer.store.file;
-	//	// Get file
-	//	var file = app.Account.getFile(fileId);
-	//	file.setStyleTemplates([]);
-	//}
 
  });

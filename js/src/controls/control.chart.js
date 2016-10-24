@@ -2,6 +2,7 @@ Wu.Control.Chart = Wu.Control.extend({
 
 	initialize : function(options) {
 
+		Wu.setOptions(this, options);
 
 		// OTHER OPTIONS
 		var multiPopUp = options.multiPopUp;
@@ -17,21 +18,29 @@ Wu.Control.Chart = Wu.Control.extend({
 			// Create content
 			var content = this.multiPointPopUp(multiPopUp);
 
+		// csv 
+		} else if (this.isCSV()) {
+
+			// get layer
+			var layer = options.e.layer;
+
+			// get tooltip
+			this.popupSettings = layer.getTooltip();
+
+			// create custom csv content
+			var content = this.createCSVContent();
 
 		// If we are sampling from point (click)
 		} else {
 
-			if (!e) {
-				console.error('no "e" provided?');
-				return;
-			}
+			// catch error
+			if (!e) return console.error('no "e" provided?');
 
 			// Get pop-up settings
 			this.popupSettings = e.layer.getTooltip();
 
 			// Create content
 			var content = this.singlePopUp(e);
-
 		}
 
 		// Return if disabled
@@ -55,6 +64,114 @@ Wu.Control.Chart = Wu.Control.extend({
 
 	},
 
+	createCSVContent : function (layer) {
+
+		// get layer
+		var layer = layer || this.options.e.layer;
+
+		// get meta
+		var meta = layer.getMeta();
+
+		// get csv
+		var csv = meta.csv;
+
+		// get data
+		var data = this.options.e.data;
+
+		// get tooltip settings
+		var tooltip = layer.getTooltip();
+
+		// get metafields
+		var fields = tooltip.metaFields;
+
+		// get csv classes
+		var display_name = _.find(csv, {type : 'display_name'});
+		var legend = _.find(csv, {type : 'legend'});
+		var t1 = _.find(csv, {type : 't1'});
+		var t2 = _.find(csv, {type : 't2'});
+		var t3 = _.find(csv, {type : 't3'});
+		var t4 = _.find(csv, {type : 't4'});
+		var t5 = _.find(csv, {type : 't5'});
+		var t6 = _.find(csv, {type : 't6'});
+
+		// create container
+		var container = Wu.DomUtil.create('div', 'popup-csv-container');
+
+		// create header
+		var header = Wu.DomUtil.create('div', 'popup-csv-header', container, layer.getTitle());
+
+		// create content wrapper
+		var content = Wu.DomUtil.create('div', 'popup-csv-content', container);
+
+		// create inner content
+		_.forEach(data, function (v, k) {
+			if (_.isNull(v)) return;
+			if (k == 'the_geom_3857') return;
+			if (k == 'the_geom_4326') return;
+			if (k == 'type') return;
+			if (k == 'comments') return;
+			if (k == 'gid') return;
+			if (k == 'lat') return;
+			if (k == 'lng') return;
+
+			// check if the field is enabled in popup settings
+			var isOn = _.isUndefined(fields[k]) ? false : fields[k].on;
+			if (!isOn) return;
+
+			// create line
+			var line_wrap = Wu.DomUtil.create('div', 'popup-csv-line-wrap', content);
+
+			// set name, value
+			var name_div = Wu.DomUtil.create('div', 'popup-csv-line-name', line_wrap, display_name[k]);
+			var value_div = Wu.DomUtil.create('div', 'popup-csv-line-value', line_wrap, v + ' ' + legend[k]);
+
+			// set tilstandsklasse
+			var tclass = this._get_t_class_html(csv, k, v);
+			line_wrap.appendChild(tclass);
+
+		}.bind(this));
+
+		return container;
+	},
+
+	_get_t_class_html : function (csv, k, v) {
+		var t1 = _.find(csv, {type : 't1'});
+		var t2 = _.find(csv, {type : 't2'});
+		var t3 = _.find(csv, {type : 't3'});
+		var t4 = _.find(csv, {type : 't4'});
+		var t5 = _.find(csv, {type : 't5'});
+		var t6 = _.find(csv, {type : 't6'});
+
+		// k = 4
+		// v = 270
+
+		var tclass = 0;
+
+
+		if (t1 && v <  parseFloat(t1[k])) tclass = 1;
+		if (t1 && v >= parseFloat(t1[k])) tclass = 2;
+		if (t2 && v >= parseFloat(t2[k])) tclass = 3;
+		if (t3 && v >= parseFloat(t3[k])) tclass = 4;
+		if (t4 && v >= parseFloat(t4[k])) tclass = 5;
+		if (t5 && v >= parseFloat(t5[k])) tclass = 6;
+		if (t6 && v >= parseFloat(t6[k])) tclass = 7;
+
+		var content = Wu.DomUtil.create('div', 'popup-csv-class tilstandsklasse-' + tclass);
+		content.innerHTML = tclass ? 'Tilstandsklasse ' + tclass : 'Ukjent tilstandsklasse';
+
+		return content;
+
+	},
+
+	isCSV : function () {
+		var options = this.options;
+		var layer = options.e.layer;
+		if (!layer) return;
+
+		// return true if csv key exists on metadata
+		return _.has(layer.getMeta(), 'csv');
+	},
+
 
 	// Open pop-up
 	openPopup : function (e, multiPopUp) {
@@ -68,7 +185,7 @@ Wu.Control.Chart = Wu.Control.extend({
 
 		// set latlng
 		var latlng = multiPopUp ? multiPopUp.center : e.latlng;
-		
+
 		// return if no content
 		if (!content) return this._clearPopup();
 		
@@ -105,50 +222,79 @@ Wu.Control.Chart = Wu.Control.extend({
 		// Todo: enable popup-settings for draw selection
 		if ( multiPopUp ) return;
 
-		var content = this.singlePopUp(e);
+		if (this.isCSV()) {
 
+			// get layer
+			var layer = options.e.layer;
+
+			// get tooltip
+			this.popupSettings = layer.getTooltip();
+
+			// create content
+			var content = this.createCSVContent(layer);
+		
+		} else {
+			var content = this.singlePopUp(e);
+		}
+
+		// set content to popup
 		popup.setContent(content, true);
 	},
 
+	// get real marker position (from data)
 	_getMarkerPosition : function (latlng, e) {
-		// try to calculate true position of point, instead of mouse pos. need to look in data. 
-		// this is kinda specific to globesar's data, but could be made pluggable.
-		// var latlng = L.Projection.Mercator.unproject({x:e.data.north, y:e.data.east}); // wrong conversion, wrong epsg?
-		return latlng;
+		
+		// debug. problems with e.data.lat/lng coming from dataset, which may be any projection... 
+		return latlng; 
+		
+		// return latlng if no data	
+		if (!e.data || !e.data.lat || !e.data.lng) return latlng;
+
+		// read latlng from data
+		var lat = e.data.lat;
+		var lng = e.data.lng;
+
+		// return leaflet latlng object
+		return L.latLng(lat, lng);
 	},
 
 	// Add marker circle (not working)
 	_addMarkerCircle : function (latlng) {
 
+		// circle marker styling
 		var styling = { 
-			radius: 10,
+			radius: 15,
 			fillColor: "white",
-			color: "white",
+			color: "gainsboro",
 			weight: 15,
-			opacity : 1,
-			fillOpacity: 0.4
+			opacity : 0.7,
+			fillOpacity: 0
 		};
 
-		this.popUpMarkerCircle = L.circleMarker(latlng, styling).addTo(app._map);
+		// create circle marker
+		this._circleMarker = L.circleMarker(latlng, styling).addTo(app._map);
 	},
 
 	_addPopupCloseEvent : function () {
 		if (this._popInit) return;
 		this._popInit = true;	// only run once
 
-		var map = app._map;
-		map.on('popupclose',  this._clearPopup, this);
+		// close event
+		app._map.on('popupclose',  this._clearPopup, this);
 	},
 
 	_removePopupCloseEvent : function () {
-		var map = app._map;
-		map.off('popupclose',  this._clearPopup, this);
+
+		// remove close event
+		app._map.off('popupclose',  this._clearPopup, this);
 	},
 
 	_refresh : function () {
 
+		// remove old popup
 		if (this._popup) this._popup._remove();
 		
+		// clear popup
 		this._clearPopup(false);
 	},
 
@@ -162,7 +308,7 @@ Wu.Control.Chart = Wu.Control.extend({
 		this._popup = null;
 
 		// remove marker
-		this.popUpMarkerCircle && app._map.removeLayer(this.popUpMarkerCircle);
+		this._circleMarker && app._map.removeLayer(this._circleMarker);
 
 		// remove event
 		this._removePopupCloseEvent();
@@ -544,7 +690,6 @@ Wu.Control.Chart = Wu.Control.extend({
 	// Header
 	createHeader : function (options) {
 
-
 		// get vars
 		var headerMeta = options.headerMeta;
 		var layerName  = options.layerName;
@@ -595,7 +740,7 @@ Wu.Control.Chart = Wu.Control.extend({
 
 			if (!setting) return;
 
-			if ( _key == 'geom' || _key == 'the_geom_3857' || _key == 'the_geom_4326' ) return;
+			if ( _key == 'lat' || _key == 'lng' || _key == 'geom' || _key == 'the_geom_3857' || _key == 'the_geom_4326' ) return;
 			
 			// Do not show field if there is no value
 			if ( !_val ) return;
@@ -855,9 +1000,6 @@ Wu.Control.Chart = Wu.Control.extend({
 				columns: [reg_x, reg_y]
 			});
 
-			// analytics/slack
-			app.Analytics.onEnabledRegression();
-		
 		} else {
 
 			Wu.DomUtil.removeClass(elem, 'switch-on');

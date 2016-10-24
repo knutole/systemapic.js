@@ -75,7 +75,7 @@ L.Control.Geolocation = Wu.Control.extend({
 				jsonret.push(adr);
 			}
 			
-			var all = _.unique(jsonret, function (j) {
+			var all = _.uniq(jsonret, function (j) {
 				if (j) return j.address;
 			});
 

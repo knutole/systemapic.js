@@ -1,4 +1,5 @@
 Wu.Dropdown = Wu.Class.extend({
+    
     // this function will run automatically on new Wu.Dropdown()
 	initialize : function (options) {
   		Wu.setOptions(this, options); // will put options in this.options
@@ -6,12 +7,17 @@ Wu.Dropdown = Wu.Class.extend({
 	},
 
 	_initLayout : function () {
-		this._baseLayerDropdownContainer = Wu.DomUtil.create('div', 'base-layer-dropdown-container', this.options.appendTo);
+		// set class name
+		var className = 'base-layer-dropdown-container ';
+		if (this.options.className) className += this.options.className;
+
+		this._baseLayerDropdownContainer = Wu.DomUtil.create('div', className, this.options.appendTo);
 		this._initLayoutActiveLayers();
 		this._initEventsListners();
 	},
 
 	_initLayoutActiveLayers : function (options) {
+		
 		this._activeLayersWrap = Wu.DomUtil.create('div', 'baselayer-dropdown-wrapper', this._baseLayerDropdownContainer);
 		this._selectWrap = Wu.DomUtil.create('div', 'chrome chrome-content active-layer select-wrap', this._activeLayersWrap);
 		this._select = Wu.DomUtil.create('div', 'form-combobox_inner', this._selectWrap);
@@ -19,9 +25,12 @@ Wu.Dropdown = Wu.Class.extend({
 		this._form_combobox__options_wrapper = Wu.DomUtil.create('div', 'form-combobox_options_wrapper', this._select);
 		this._form_combobox__options = Wu.DomUtil.create('ul', 'form-combobox_options', this._form_combobox__options_wrapper);
 
+
+		this.options.options = [];
+
 		// Create select options
-		this.options.content.forEach(function(selectOption) {
-			var option = Wu.DomUtil.create('li', 'form-combobox_option item', this._form_combobox__options, selectOption.title);
+		this.options.content.forEach(function(selectOption, i) {
+			var option = this.options.options[i] = Wu.DomUtil.create('li', 'form-combobox_option item', this._form_combobox__options, selectOption.title);
 
 			if (selectOption.disabled) {
 				Wu.DomUtil.addClass(option, "disabled-option");
@@ -56,8 +65,36 @@ Wu.Dropdown = Wu.Class.extend({
 		this._form_combobox_input.setAttribute("tabindex", 1);
 		Wu.DomEvent.on(this._form_combobox_input, 'keydown', this._onKeydown, this);
 		
-		// Wu.DomEvent.on(me._select, 'change', me.options.fn, me.options.scope || this);
 	},
+
+
+
+	setFromUuid : function (layerUuid) {
+	
+		// Select layer we're working on
+		// var options = this.layerSelector.options.options;
+		var options = this.options.options;
+
+		for (var k in options) {
+
+			var isElem = Wu.Tools.isElement(options[k]);
+			if ( !isElem ) return;
+
+			var uuid = options[k].getAttribute('data-value');
+			if ( uuid == layerUuid ) {
+				var title = options[k].innerHTML;
+				this.setValue({
+					value: uuid,
+					title: title
+				});
+			}
+		}
+
+	},
+
+
+
+
 
 	_initEventsListners : function () {
 		Wu.DomEvent.on(this._select, 'click', this._toggleListItems, this);
@@ -104,6 +141,7 @@ Wu.Dropdown = Wu.Class.extend({
 	},
 
 	setValue: function (selectOption) {
+
 		this._form_combobox_input.setAttribute('data-value', selectOption.value);
 		this._form_combobox_input.innerHTML = selectOption.title;
 
@@ -150,6 +188,7 @@ Wu.Dropdown = Wu.Class.extend({
 	},
 
 	_onKeydown: function (e) {
+
 		var key = event.which ? event.which : event.keyCode;
 
 		if (key === 32) {
@@ -178,7 +217,46 @@ Wu.Dropdown = Wu.Class.extend({
 		if (key === 38 || key === 40 || key === 27 || key === 32 || key === 13) {
 			Wu.DomEvent.stop(e);	
 		}
+
+
+		if ( key > 48 && key < 90 ) {
+			this._setKey(key);
+		}
+
+		
+	},
+
+	_setKey : function (key) {
+
+		// Get character
+		var _char = Wu.Tools.keyMap(key).toUpperCase();
+
+		// Go through list of options, jump to first hit
+	 	for ( var k in this.options.content ) {
+
+	 		var c = this.options.content[k];
+
+	 		// Stop if list item is not an object for some reason
+	 		if ( typeof c !== 'object' ) return;
+
+	 		// Get first character in option
+	 		var _firstChar = c.title.charAt(0).toUpperCase();
+
+	 		// If it's a match
+			if ( _char == _firstChar ) {
+
+				// Set value on list
+				this.setValue({
+					value: c.value,
+					title: c.title
+				});
+
+				// Stop
+				return;
+			}		
+	 	}
 		
 	}
+
 
 });

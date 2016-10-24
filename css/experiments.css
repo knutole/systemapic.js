@@ -111,7 +111,7 @@
     text-align: left;
     height: 18px;
     text-align: right;
-    z-index: 100;
+    z-index: 1100;
     bottom: 10px !important;
     right: 5px;
     top: initial;
@@ -124,7 +124,7 @@
     vertical-align: top;
     border: 0px !important;
     margin-right: 2px;
-    height: 17px;
+    height: 24px !important;
     border-radius: 2px;
     color: #eee;
     font-size: 12px;
@@ -554,7 +554,7 @@
     padding-bottom: 0;
     /* padding: 0; */
     /* width: 0; */
-    background-color: #FCFCFC;
+    background-color: #e5e5e5;
 }
 .add-another-email {
     font-weight: 600;
@@ -954,7 +954,6 @@
     position: relative;
     right: -34px;
     transition: opacity 100ms linear;
-/*<<<<<<< HEAD*/
 }
 
 .share-dropdown {
@@ -981,6 +980,3 @@
     border-radius: 0 0 4px 4px;
     padding-bottom: 10px;
 }
-/*=======
-    }
->>>>>>> 3f85c79d12440467bbb33415fefdb283a759d6a2*/

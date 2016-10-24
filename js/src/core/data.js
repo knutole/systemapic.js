@@ -38,8 +38,26 @@ Wu.Data = Wu.Class.extend({
 		// add button to resumable
 		this._resumable.assignBrowse(button);	
 
+		// add other options
+		var optionsDiv = Wu.DomUtil.create('div', 'upload-button-options', this._buttonContainer, '<i class="fa fa-caret-down"></i>');
+
+		// create dropdown
+        var optionsDropdownDiv = Wu.DomUtil.create('div', 'upload-button-dropdown displayNone', this._buttonContainer);
+
+        // create cube item
+        var createCube = Wu.DomUtil.create('div', 'upload-button-create-cube', optionsDropdownDiv, 'Create cube...');
+             
+        // return all divs
+		var returnObject = {
+			uploadDiv : button,
+			optionsDiv : optionsDiv,
+			parent : this._buttonContainer,
+			dropdown : optionsDropdownDiv,
+			createCube : createCube,
+		}
+
 		// return button
-		return button;
+		return returnObject;
 	},
 
 	_onUploadButtonClick : function () {

@@ -81,13 +81,17 @@ L.Control.Description = Wu.Control.extend({
 		this._legendCollapsed = Wu.DomUtil.create('div', 'legend-collapsed-mobile displayNone', this._container, 'Legend');
 
 		// add event hooks
-		this._addHooks();
+		// this._addHooks();
 		this._listeners();
 	},
 
 	_addHooks : function () {
 		
-		if ( app.isMobile ) {
+		var isMobile = L.Browser.mobile;
+		
+		if ( app.isMobile || isMobile ) { // app.isMobile is not ready yet...
+
+
 			// Toggle while clicking on the container on toch devices
 			Wu.DomEvent.on(this._container, 'click', this.closeMobile, this);
 			Wu.DomEvent.on(this._legendCollapsed, 'click', this.openMobile, this);
@@ -127,8 +131,19 @@ L.Control.Description = Wu.Control.extend({
 	_listeners : function () {
 		Wu.Mixin.Events.on('updateLegend', this._legendIsBeingUpdated, this);
 		Wu.Mixin.Events.on('phantomjs', this.compactLegend, this);
-
+		Wu.Mixin.Events.on('toggleLeftChrome', this._toggleLeftChrome, this);
 	},
+
+	_toggleLeftChrome : function (e) {
+
+		// Stopping computers and pads
+		if ( !app.isMobile || !app.isMobile.mobile ) return;
+
+		var isOpen = e.detail.leftPaneisOpen;
+		var display = isOpen ? "none" : "block";
+		this._container.style.display = display;
+	},
+
 
 	_legendIsBeingUpdated : function (e) {
 
@@ -170,7 +185,17 @@ L.Control.Description = Wu.Control.extend({
 		this._calculateHeight();
 	},
 
+	_layerEnabled : function (e) {
+
+		// console.log('control.description layerEnabled', e, this.layers);
+	},
+
+	_layerDisabled : function (e) {
+		// console.log('layer _layerDisabled', e);
+	},	
+
 	showHide : function () {
+		// console.error('showHide', this);
 
 		// Hide if empty
 		if ( !this.layers || this.isEmpty(this.layers) ) {
@@ -183,6 +208,7 @@ L.Control.Description = Wu.Control.extend({
 	},
 
 	_hide : function () {	
+		// console.error('TODO: hide/show not working. refactor!');
 		this._container.style.display = 'none'; 
 		this.isOpen = false;
 
@@ -281,6 +307,8 @@ L.Control.Description = Wu.Control.extend({
 	},
 
 	_removeLayer : function (layer) {
+
+		// console.log('_removeLayer', layer, this);
 
 		// Delete layer from store
 		var layerUuid = layer.getUuid();
@@ -385,6 +413,7 @@ L.Control.Description = Wu.Control.extend({
 
 	getLegend : function (layer) {
 		var legendHTML = layer.isVector() ? this.createLegendHTML() : '';
+		// console.log('getLEgend', legendHTML);
 		return legendHTML;
 	},
 
@@ -417,7 +446,6 @@ L.Control.Description = Wu.Control.extend({
 
 
 	setHTMLfromStore : function (uuid) {
-
 
 		this.legendUuid = uuid;
 

@@ -51,7 +51,6 @@ Wu.PhantomJS = Wu.Class.extend({
 
 		// phantom feedback
 		this.ping('developing!');
-		this.ping(view);
 
 
 		
@@ -63,12 +62,13 @@ Wu.PhantomJS = Wu.Class.extend({
 		// parse if string
 		if (_.isString(view)) view = Wu.parse(view);
 		
+		this.ping(Wu.stringify(view));
+
 		var project_id = view.project_id;
 		var position = view.position;
 		var layers = view.layers;
 
 		this.ping(project_id);
-		this.ping(view);
 
 		if (!project_id) {
 			return this.ping(JSON.stringify({
@@ -131,7 +131,7 @@ Wu.PhantomJS = Wu.Class.extend({
 					var lm = app.MapPane.getControls().layermenu;
 					var activeLayers = lm._getActiveLayers();
 					activeLayers.forEach(function (al) {
-						al.layer.remove(map);
+						al && al.layer.remove(map);
 					});
 
 					// set layers
@@ -164,7 +164,7 @@ Wu.PhantomJS = Wu.Class.extend({
 						this.ping('layers to load: ' + stillLoading);
 
 						// ready!
-						if (stillLoading <= 0) {
+						if (stillLoading <= 0 || _.isUndefined(stillLoading)) {
 
 							// kill interval
 							clearInterval(waiting);

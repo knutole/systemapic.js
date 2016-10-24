@@ -301,12 +301,15 @@ Wu.Util = {
 	checkDisconnect : function (response) {
 		var string = response.substring(0,15);
 		if (string == '<!doctype html>')  {
+			
 			// we got a disconnect!!!
-			app.feedback.setError({
-				title : 'You have been logged out.', 
-				description : 'Please reload the page to log back in.',
-				clearTimer : false
-			});
+			// app.feedback.setError({
+			// 	title : 'You have been logged out.', 
+			// 	description : 'Please reload the page to log back in.',
+			// 	clearTimer : false
+			// });
+
+			app._login('You have been logged out. Please log back in.')
 
 			return false;
 		}
@@ -372,6 +375,7 @@ Wu.Util = {
 				} else {
 					console.log('http.status: ', http.status);
 					console.log('httP', http);
+					Wu.Util.checkDisconnect(http.responseText);
 					done && done(http.status, http.responseText);
 				}
 			}
@@ -410,6 +414,7 @@ Wu.Util = {
 				} else {
 					console.log('http.status: ', http.status);
 					console.log('httP', http);
+					Wu.Util.checkDisconnect(http.responseText);
 					done && done(http.status, http.responseText);
 				}
 			}
@@ -509,6 +514,7 @@ Wu.Util = {
 				} else {
 					console.log('http.status: ', http.status);
 					console.log('httP', http);
+					Wu.Util.checkDisconnect(http.responseText);
 					done && done(http.status, http.responseText);
 				}
 			}
@@ -2210,6 +2216,19 @@ Wu.Tools = {
 
 	},
 
+	componentToHex : function (c) {
+    		var hex = c.toString(16);
+    		return hex.length == 1 ? "0" + hex : hex;
+	},	
+
+	rgb2HEX : function (rgb) {
+		var r = this.componentToHex(rgb.r);
+		var g = this.componentToHex(rgb.g);
+		var b = this.componentToHex(rgb.b);
+
+		return '#' + r + g + b;
+	},
+
 	// Creates RGB from hex
 	hex2RGB : function (hex) {
 
@@ -2400,7 +2419,367 @@ Wu.Tools = {
 		// Return black if there are no matches
 		// (could return false, but will have to catch that error later)
 		return '#000000';				
-	},	
+	},
+
+	mixColors : function (RGB1, RGB2, percent) {
+
+		if ( !RGB1 || !RGB2 ) return;
+		if ( !percent ) var percent = 50;
+
+		// Get each color range
+		var r_range = Math.abs(RGB1.r - RGB2.r);
+		var g_range = Math.abs(RGB1.g - RGB2.g);
+		var b_range = Math.abs(RGB1.b - RGB2.b);
+
+		// Avoid false on zero
+		var a1 = RGB1.a ? RGB1.a : 0;
+		var a2 = RGB2.a ? RGB2.a : 0;
+
+		// Get new alpha
+		var a_range = Math.abs(a1 - a2);
+		var a_diff = a_range * percent;
+		var a_new = a1 < a2 ? a1 + a_diff : a1 - a_diff;
+		a_new = Math.ceil(a_new * 100)/100;
+
+		// Figure out new color value
+		var r_diff = Math.round(r_range * percent);
+		var g_diff = Math.round(g_range * percent);
+		var b_diff = Math.round(b_range * percent);
+
+		var r_new = RGB1.r < RGB2.r ? RGB1.r + r_diff : RGB1.r - r_diff;
+		var g_new = RGB1.g < RGB2.g ? RGB1.g + g_diff : RGB1.g - g_diff;
+		var b_new = RGB1.b < RGB2.b ? RGB1.b + b_diff : RGB1.b - b_diff;
+
+		return { r : r_new, g : g_new, b : b_new, a : a_new };
+
+	},
+
+	rgbStyleStr : function (rgb) {
+		return 'rgb(' + rgb.r + ',' + rgb.g + ',' + rgb.b + ')';
+	},
+
+	rgbaStyleStr : function (rgba) {
+		return 'rgba(' + rgba.r + ',' + rgba.g + ',' + rgba.b + ',' + rgba.a + ')';
+	},
+
+	createGradient : function (colors) {
+
+		var c = colors.join(',');
+
+		var style = 'background: -webkit-linear-gradient(left, ' + c + ');';
+		style += 'background: -o-linear-gradient(right, ' + c + ');';
+		style += 'background: -moz-linear-gradient(right, ' + c + ');';
+		style += 'background: linear-gradient(to right, ' + c + ');';
+		return style;
+	},
+
+	transformTranslate : function (x, y) {
+		var str  = '-ms-transform: translate(' + x + 'px,' + y + 'px);';
+		    str += '-webkit-transform: translate(' + x + 'px,' + y + 'px);';
+   		    str += 'transform: translate(' + x + 'px,' + y + 'px);';
+    		return str;
+	},
+
+
+	isElement : function (obj) {
+		try {
+			//Using W3 DOM2 (works for FF, Opera and Chrome)
+			return obj instanceof HTMLElement;
+		} catch(e) {
+			//Browsers not supporting W3 DOM2 don't have HTMLElement and
+			//an exception is thrown and we end up here. Testing some
+			//properties that all elements have. (works on IE7)
+			return (typeof obj==="object") &&
+			(obj.nodeType===1) && (typeof obj.style === "object") &&
+			(typeof obj.ownerDocument ==="object");
+
+		}
+	},
+
+	forceNumeric : function (e) {		
+		// only allow '0-9' + '.' and '-'
+		return e.charCode >= 45 && e.charCode <= 57 && e.charCode != 47;
+	},
+
+	keyMap : function (key) {
+		var keyboardMap = [
+			"", // [0]
+			"", // [1]
+			"", // [2]
+			"CANCEL", // [3]
+			"", // [4]
+			"", // [5]
+			"HELP", // [6]
+			"", // [7]
+			"BACK_SPACE", // [8]
+			"TAB", // [9]
+			"", // [10]
+			"", // [11]
+			"CLEAR", // [12]
+			"ENTER", // [13]
+			"ENTER_SPECIAL", // [14]
+			"", // [15]
+			"SHIFT", // [16]
+			"CONTROL", // [17]
+			"ALT", // [18]
+			"PAUSE", // [19]
+			"CAPS_LOCK", // [20]
+			"KANA", // [21]
+			"EISU", // [22]
+			"JUNJA", // [23]
+			"FINAL", // [24]
+			"HANJA", // [25]
+			"", // [26]
+			"ESCAPE", // [27]
+			"CONVERT", // [28]
+			"NONCONVERT", // [29]
+			"ACCEPT", // [30]
+			"MODECHANGE", // [31]
+			"SPACE", // [32]
+			"PAGE_UP", // [33]
+			"PAGE_DOWN", // [34]
+			"END", // [35]
+			"HOME", // [36]
+			"LEFT", // [37]
+			"UP", // [38]
+			"RIGHT", // [39]
+			"DOWN", // [40]
+			"SELECT", // [41]
+			"PRINT", // [42]
+			"EXECUTE", // [43]
+			"PRINTSCREEN", // [44]
+			"INSERT", // [45]
+			"DELETE", // [46]
+			"", // [47]
+			"0", // [48]
+			"1", // [49]
+			"2", // [50]
+			"3", // [51]
+			"4", // [52]
+			"5", // [53]
+			"6", // [54]
+			"7", // [55]
+			"8", // [56]
+			"9", // [57]
+			"COLON", // [58]
+			"SEMICOLON", // [59]
+			"LESS_THAN", // [60]
+			"EQUALS", // [61]
+			"GREATER_THAN", // [62]
+			"QUESTION_MARK", // [63]
+			"AT", // [64]
+			"A", // [65]
+			"B", // [66]
+			"C", // [67]
+			"D", // [68]
+			"E", // [69]
+			"F", // [70]
+			"G", // [71]
+			"H", // [72]
+			"I", // [73]
+			"J", // [74]
+			"K", // [75]
+			"L", // [76]
+			"M", // [77]
+			"N", // [78]
+			"O", // [79]
+			"P", // [80]
+			"Q", // [81]
+			"R", // [82]
+			"S", // [83]
+			"T", // [84]
+			"U", // [85]
+			"V", // [86]
+			"W", // [87]
+			"X", // [88]
+			"Y", // [89]
+			"Z", // [90]
+			"OS_KEY", // [91] Windows Key (Windows) or Command Key (Mac)
+			"", // [92]
+			"CONTEXT_MENU", // [93]
+			"", // [94]
+			"SLEEP", // [95]
+			"NUMPAD0", // [96]
+			"NUMPAD1", // [97]
+			"NUMPAD2", // [98]
+			"NUMPAD3", // [99]
+			"NUMPAD4", // [100]
+			"NUMPAD5", // [101]
+			"NUMPAD6", // [102]
+			"NUMPAD7", // [103]
+			"NUMPAD8", // [104]
+			"NUMPAD9", // [105]
+			"MULTIPLY", // [106]
+			"ADD", // [107]
+			"SEPARATOR", // [108]
+			"SUBTRACT", // [109]
+			"DECIMAL", // [110]
+			"DIVIDE", // [111]
+			"F1", // [112]
+			"F2", // [113]
+			"F3", // [114]
+			"F4", // [115]
+			"F5", // [116]
+			"F6", // [117]
+			"F7", // [118]
+			"F8", // [119]
+			"F9", // [120]
+			"F10", // [121]
+			"F11", // [122]
+			"F12", // [123]
+			"F13", // [124]
+			"F14", // [125]
+			"F15", // [126]
+			"F16", // [127]
+			"F17", // [128]
+			"F18", // [129]
+			"F19", // [130]
+			"F20", // [131]
+			"F21", // [132]
+			"F22", // [133]
+			"F23", // [134]
+			"F24", // [135]
+			"", // [136]
+			"", // [137]
+			"", // [138]
+			"", // [139]
+			"", // [140]
+			"", // [141]
+			"", // [142]
+			"", // [143]
+			"NUM_LOCK", // [144]
+			"SCROLL_LOCK", // [145]
+			"WIN_OEM_FJ_JISHO", // [146]
+			"WIN_OEM_FJ_MASSHOU", // [147]
+			"WIN_OEM_FJ_TOUROKU", // [148]
+			"WIN_OEM_FJ_LOYA", // [149]
+			"WIN_OEM_FJ_ROYA", // [150]
+			"", // [151]
+			"", // [152]
+			"", // [153]
+			"", // [154]
+			"", // [155]
+			"", // [156]
+			"", // [157]
+			"", // [158]
+			"", // [159]
+			"CIRCUMFLEX", // [160]
+			"EXCLAMATION", // [161]
+			"DOUBLE_QUOTE", // [162]
+			"HASH", // [163]
+			"DOLLAR", // [164]
+			"PERCENT", // [165]
+			"AMPERSAND", // [166]
+			"UNDERSCORE", // [167]
+			"OPEN_PAREN", // [168]
+			"CLOSE_PAREN", // [169]
+			"ASTERISK", // [170]
+			"PLUS", // [171]
+			"PIPE", // [172]
+			"HYPHEN_MINUS", // [173]
+			"OPEN_CURLY_BRACKET", // [174]
+			"CLOSE_CURLY_BRACKET", // [175]
+			"TILDE", // [176]
+			"", // [177]
+			"", // [178]
+			"", // [179]
+			"", // [180]
+			"VOLUME_MUTE", // [181]
+			"VOLUME_DOWN", // [182]
+			"VOLUME_UP", // [183]
+			"", // [184]
+			"", // [185]
+			"SEMICOLON", // [186]
+			"EQUALS", // [187]
+			"COMMA", // [188]
+			"MINUS", // [189]
+			"PERIOD", // [190]
+			"SLASH", // [191]
+			"BACK_QUOTE", // [192]
+			"", // [193]
+			"", // [194]
+			"", // [195]
+			"", // [196]
+			"", // [197]
+			"", // [198]
+			"", // [199]
+			"", // [200]
+			"", // [201]
+			"", // [202]
+			"", // [203]
+			"", // [204]
+			"", // [205]
+			"", // [206]
+			"", // [207]
+			"", // [208]
+			"", // [209]
+			"", // [210]
+			"", // [211]
+			"", // [212]
+			"", // [213]
+			"", // [214]
+			"", // [215]
+			"", // [216]
+			"", // [217]
+			"", // [218]
+			"OPEN_BRACKET", // [219]
+			"BACK_SLASH", // [220]
+			"CLOSE_BRACKET", // [221]
+			"QUOTE", // [222]
+			"", // [223]
+			"META", // [224]
+			"ALTGR", // [225]
+			"", // [226]
+			"WIN_ICO_HELP", // [227]
+			"WIN_ICO_00", // [228]
+			"", // [229]
+			"WIN_ICO_CLEAR", // [230]
+			"", // [231]
+			"", // [232]
+			"WIN_OEM_RESET", // [233]
+			"WIN_OEM_JUMP", // [234]
+			"WIN_OEM_PA1", // [235]
+			"WIN_OEM_PA2", // [236]
+			"WIN_OEM_PA3", // [237]
+			"WIN_OEM_WSCTRL", // [238]
+			"WIN_OEM_CUSEL", // [239]
+			"WIN_OEM_ATTN", // [240]
+			"WIN_OEM_FINISH", // [241]
+			"WIN_OEM_COPY", // [242]
+			"WIN_OEM_AUTO", // [243]
+			"WIN_OEM_ENLW", // [244]
+			"WIN_OEM_BACKTAB", // [245]
+			"ATTN", // [246]
+			"CRSEL", // [247]
+			"EXSEL", // [248]
+			"EREOF", // [249]
+			"PLAY", // [250]
+			"ZOOM", // [251]
+			"", // [252]
+			"PA1", // [253]
+			"WIN_OEM_CLEAR", // [254]
+			"" // [255]
+		];
+		return keyboardMap[key];
+	},
+
+	// Get cursor position in input field
+	getCursorPos : function (input) {
+	    // Internet Explorer Caret Position (TextArea)
+	    if (document.selection && document.selection.createRange) {
+	        var range = document.selection.createRange();
+	        var bookmark = range.getBookmark();
+	        var caret_pos = bookmark.charCodeAt(2) - 2;
+	    } else {
+	        // Firefox Caret Position (TextArea)
+	        if (input.setSelectionRange)
+	            var caret_pos = input.selectionStart;
+	    }
+	    return caret_pos;
+	},
+
+	
+
 
 };
 

@@ -342,9 +342,6 @@ L.Control.Inspect = Wu.Control.extend({
 		// reset dragging y count
 		this._md = 0;
 
-		// Google Analytics event tracking
-		app.Analytics.setGaEvent(['Controls', 'Inspect layers: Z-index change for > ' + layer.getTitle()]);
-
 	},
 
 	_moveDown : function () {
@@ -365,9 +362,6 @@ L.Control.Inspect = Wu.Control.extend({
 		// reset dragging y count
 		this._md = 0;
 
-		// Google Analytics event tracking
-		app.Analytics.setGaEvent(['Controls', 'Inspect layers: Z-index change for > ' + layer.getTitle()]);
-
 	},
 
 
@@ -383,11 +377,6 @@ L.Control.Inspect = Wu.Control.extend({
 
 		// Hide Layer inspector if it's empty
 		if (this._layers.length == 0) this._content.style.display = 'none';
-
-
-		// Google Analytics event tracking
-		// app.Analytics.setGaEvent(['Controls', 'Inspect layers: Remove layer > ' + layer.getTitle()]);
-		
 
 	},
 
@@ -420,8 +409,6 @@ L.Control.Inspect = Wu.Control.extend({
 		// move up in zindex
 		this._zx.up(layer);
 
-		// Google Analytics event tracking
-		app.Analytics.setGaEvent(['Controls', 'Inspect layers: Z-index change for > ' + layer.getTitle()]);		
 	},
 
 	moveDown : function (entry) {
@@ -438,8 +425,6 @@ L.Control.Inspect = Wu.Control.extend({
 		// move up in zindex
 		this._zx.down(layer);
 
-		// Google Analytics event tracking
-		app.Analytics.setGaEvent(['Controls', 'Inspect layers: Z-index change for > ' + layer.getTitle()]);		
 	},
 
 	
@@ -458,9 +443,6 @@ L.Control.Inspect = Wu.Control.extend({
 		// fly
 		var map = app._map;
 		map.fitBounds(bounds);
-
-		// Google Analytics event tracking
-		app.Analytics.setGaEvent(['Controls', 'Inspect layers: Fly to bounds for > ' + layer.getTitle()]);
 
 	},
 
@@ -483,9 +465,6 @@ L.Control.Inspect = Wu.Control.extend({
 			// add class to eye
 			Wu.DomUtil.addClass(entry.eye, 'inspecting');
 		}
-
-		// Google Analytics event tracking
-		app.Analytics.setGaEvent(['Controls', 'Inspect layers: Toggle isolate > ' + entry.layer.getTitle()]);	
 
 	},
 

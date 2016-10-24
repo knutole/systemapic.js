@@ -20,6 +20,10 @@ Wu.ZIndexControl = Wu.Class.extend({
 		this.enforce();
 	},
 
+	addAt : function (layer, zindex) {
+		
+	},
+
 	remove : function (layer) {
 		_.remove(this._index, function (l) {
 			return l == layer;
@@ -37,7 +41,7 @@ Wu.ZIndexControl = Wu.Class.extend({
 		// get all
 		if (!layer) return this._index;
 
-		// if layer, get layer xindex
+		// if layer, get layer zindex
 		return _.findIndex(this._index, function (l) { return layer == l; });
 	},
 

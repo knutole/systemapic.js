@@ -86,6 +86,7 @@ L.Control.Draw = Wu.Control.extend({
 	},
 
 	_drawCreated : function (e) {
+		console.log('e:', e);
 		var type = e.layerType;
 		var layer = e.layer;
 
@@ -99,10 +100,15 @@ L.Control.Draw = Wu.Control.extend({
 		this._addLayerEvents(layer);
 	},
 
+	_convertToGeoJSON : function (layer) {
+		layer._latlngs = layer._latlngs[0];
+		return layer.toGeoJSON();
+	},
+
 	_queryData : function (layer) {
 
-		// get data etc.
-		var geojson = layer.toGeoJSON();
+		// convert to geojson (hack due to err in draw layer._latlngs containing too many arrays)
+		var geojson = this._convertToGeoJSON(layer);
 
 		// fetch data
 		this._fetchData({
@@ -124,12 +130,6 @@ L.Control.Draw = Wu.Control.extend({
 			this._latestFetch = resultObject;
 
 			var layer_name = this._getPostGISLayerName(resultObject.layer_id);
-
-			// analytics/slack
-			app.Analytics.onPolygonQuery({
-				result : resultObject,
-				layer_name : layer_name
-			});
 
 		}.bind(this));
 		

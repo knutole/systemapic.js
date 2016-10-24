@@ -1,6 +1,6 @@
 Wu.Chrome.Top = Wu.Chrome.extend({
 
-	_ : 'topchrome', 
+	_ : 'topchrome',
 
 	_initialize : function (options) {
 
@@ -13,8 +13,14 @@ Wu.Chrome.Top = Wu.Chrome.extend({
 
 	initContainer : function () {
 
+		var isPublic = app.Account.isPublic();
+
+		var cName = 'chrome chrome-container chrome-top';
+		isPublic ? cName += ' public' : cName += ' logged-in';
+
+
 		// container to hold errything
-		this._container = Wu.DomUtil.create('div', 'chrome chrome-container chrome-top', app._appPane);
+		this._container = Wu.DomUtil.create('div', cName, app._appPane);
 
 		// Menu Button
 		this._menuButton = Wu.DomUtil.create('div', 'chrome-menu-button', this._container);
@@ -35,7 +41,7 @@ Wu.Chrome.Top = Wu.Chrome.extend({
 
 		// Client Logo
 		var clientLogoConfig = app.options.logos.clientLogo;
-		if (clientLogoConfig) {
+		if (clientLogoConfig && clientLogoConfig.active) {
 			this._clientLogo = Wu.DomUtil.create('div', 'chrome-button chrome-client-logo', this._buttonWrapper);
 			this._clientLogo.style.backgroundImage = clientLogoConfig.backgroundImage;
 			this._clientLogo.style.backgroundSize = clientLogoConfig.backgroundSize;
@@ -75,8 +81,9 @@ Wu.Chrome.Top = Wu.Chrome.extend({
 		// create button
 		var buttonDiv = Wu.DomUtil.create('div', className);
 
-		// css exp // hacky!
-		var referenceNode = this._buttonWrapper.lastChild.previousSibling;
+		// css exp // hacky! (depending if logo is shown or not)
+		var clientLogoConfig = app.options.logos.clientLogo;
+		var referenceNode = (clientLogoConfig && clientLogoConfig.active) ? this._buttonWrapper.lastChild.previousSibling : this._buttonWrapper.lastChild;
 		this._buttonWrapper.insertBefore(buttonDiv, referenceNode);
 
 		// save
@@ -110,9 +117,6 @@ Wu.Chrome.Top = Wu.Chrome.extend({
 	},
 
 	initDefault : function () {
-
-		// this._setUsername();
-		this._setPortalLogo();
 
 		// Init CPU clock
 		this.initCPUclock(this._container);
@@ -163,6 +167,13 @@ Wu.Chrome.Top = Wu.Chrome.extend({
 		// Toggle left pane
 		Wu.DomEvent[onoff](this._menuButton, 'click', this._toggleLeftPane, this);
 
+		Wu.Mixin.Events[onoff]('_openLayerMenu', this._onLayMenuOpen, this);
+
+	},
+
+	_onLayMenuOpen : function () {
+		if ( !app.isMobile || !app.isMobile.mobile ) return;
+		this.closeLeftPane();
 	},
 
 	addHooks : function () {
@@ -207,7 +218,6 @@ Wu.Chrome.Top = Wu.Chrome.extend({
 		}.bind(this), 50);
 	},
 
-	
 	_showHideLayerButton : function () {
 	},
 
@@ -224,6 +234,7 @@ Wu.Chrome.Top = Wu.Chrome.extend({
 
 	_shortenTitle : function (title) {
 		var maxLength = this._getMaxTitleLength();
+		console.log('maxLength', maxLength);
 		if (!title || !_.isString(title) || title.length <= maxLength) return title;
 		var cutString = title.substring(0, maxLength-1) + '...';
 		return cutString;
@@ -232,12 +243,12 @@ Wu.Chrome.Top = Wu.Chrome.extend({
 	_getMaxTitleLength : function () {
 		var screenSize = Wu.Util.getWindowSize();
 		if (screenSize.width < 1120) return 15;
-		if (screenSize.width < 1280) return 20;
-		if (screenSize.width < 1320) return 25;
-		if (screenSize.width < 1360) return 30;
-		if (screenSize.width < 1421) return 35;
-		if (screenSize.width < 1821) return 50;
-		if (screenSize.width < 2221) return 70; // guessing, todo: test on large screen
+		if (screenSize.width < 1280) return 30;
+		if (screenSize.width < 1320) return 35;
+		if (screenSize.width < 1360) return 50;
+		if (screenSize.width < 1421) return 65;
+		if (screenSize.width < 1821) return 80;
+		if (screenSize.width < 2221) return 90; // guessing, todo: test on large screen
 		return 100;
 	},
 
@@ -245,11 +256,9 @@ Wu.Chrome.Top = Wu.Chrome.extend({
 		this._setProjectTitle();
 	},
 
-	_setPortalLogo : function () {
-	},
-
 	_toggleLeftPane : function (e) {
 		this._leftPaneisOpen ? this.closeLeftPane() : this.openLeftPane();
+		Wu.Mixin.Events.fire('toggleLeftChrome', {detail : {leftPaneisOpen : this._leftPaneisOpen }}); 
 	},
 
 	openLeftPane : function () {
@@ -319,15 +328,16 @@ Wu.Chrome.Top = Wu.Chrome.extend({
 	},
 
 	_openLayerMenu : function () {
+	
 
 		// use a variable to mark editor as open
 		this._layerMenuOpen = true;
 
-		// Add "active" class from button
-		// Wu.DomUtil.addClass(this._layersBtn, 'active');
-
 		// TODO: Open Layer Menu
 		this.__layerMenu.openLayerPane();
+
+		if ( !app.isMobile || !app.isMobile.mobile ) return;
+		this.closeLeftPane();
 	},
 
 	_closeLayerMenu : function () {
@@ -335,15 +345,12 @@ Wu.Chrome.Top = Wu.Chrome.extend({
 		// mark not open
 		this._layerMenuOpen = false;
 
-		// Remove "active" class from button
-		// Wu.DomUtil.removeClass(this._layersBtn, 'active');
-
 		// TODO: Close Layer Menu
 		this.__layerMenu.closeLayerPane();
 	},	
 
-	_onCloseMenuTabs : function () {
-		
+	_onCloseMenuTabs : function () {	
+
 		// app.Chrome();
 		this.closeLeftPane();
 	}

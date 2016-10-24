@@ -153,12 +153,13 @@ Wu.Chrome.SettingsContent.SettingsSelector = Wu.Chrome.SettingsContent.extend({
 		if (this._isOpen) {
 			
 			// fire event
-			app.Socket.sendUserEvent({
-			    	user : app.Account.getFullName(),
-			    	event : 'opened',
-			    	description : 'the settings',
-			    	timestamp : Date.now()
-			})
+			// app.Socket.sendUserEvent({
+			// app.analytics.fire('opened:settings{
+			//     	user : app.Account.getFullName(),
+			//     	event : 'opened',
+			//     	description : 'the settings',
+			//     	timestamp : Date.now()
+			// })
 		}
 	},
 

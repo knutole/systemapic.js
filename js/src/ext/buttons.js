@@ -55,7 +55,7 @@ Wu.button = Wu.Class.extend({
 		}.bind(this), this);
 
 		// Force numeric
-		miniInputMax.onkeypress = this.forceNumeric;
+		miniInputMax.onkeypress = Wu.Tools.forceNumeric;
 		
 		// remember
 		this.max = miniInputMax;
@@ -76,7 +76,7 @@ Wu.button = Wu.Class.extend({
 		}.bind(this), this);
 
 		// Force numeric
-		miniInputMin.onkeypress = this.forceNumeric;
+		miniInputMin.onkeypress = Wu.Tools.forceNumeric;
 
 		// remember
 		this.min = miniInputMin;
@@ -266,6 +266,7 @@ Wu.button = Wu.Class.extend({
 	// └─┘└─┘┴─┘└─┘┴└─  └─┘┴ ┴┴─┘┴─┘
 
 	initColorBall : function () {
+
 		var appendTo    = this.options.appendTo;
 		var key         = this.options.id;
 		var fn          = this.options.fn;
@@ -273,51 +274,93 @@ Wu.button = Wu.Class.extend({
 		var on          = this.options.isOn;
 		var className   = this.options.className;
 		var value       = this.options.value;
-		var _class 		= 'chrome-color-ball ';
+		var showAlpha   = this.options.showAlpha;
+		var showInput   = this.options.showInput;
+		var format      = this.options.format;
+		var _class 	= 'chrome-color-ball ';
 
 		if ( className ) _class += className;
 
-		var color = Wu.DomUtil.create('div', _class, appendTo);
-		color.id = 'color_ball_' + key;
-		color.style.background = value;
+		this.color = Wu.DomUtil.create('div', _class, appendTo);
+		this.color.id = 'color_ball_' + key;
+		this.color.style.background = value;
 
-		this.color = color;
-
-		if ( !on ) Wu.DomUtil.addClass(color, 'disable-color-ball');
-		if ( !right ) Wu.DomUtil.addClass(color, 'left-ball');
+		if ( !on ) Wu.DomUtil.addClass(this.color, 'disable-color-ball');
+		if ( !right ) Wu.DomUtil.addClass(this.color, 'left-ball');
 
 		
 		// var that = this;
-		this.initSpectrum(value, color, key, fn)
+		this.initSpectrum({
+			value     : value, 
+			color     : this.color, 
+			key       : key, 
+			fn        : fn, 
+			showAlpha : showAlpha, 
+			showInput : showInput, 
+			format    : format
+		})
+
+
+		// $(this.color).spectrum('set', '#660000');
 
 	},
 
 
-	initSpectrum : function (hex, wrapper, key, fn) {
+	initSpectrum : function (options) {
+
+		var col = options.value;
+		var wrapper = options.color;
+		var key = options.key;
+		var fn = options.fn;
+		var showAlpha = options.showAlpha;
+		var showInput = options.showInput;
+		var format = options.format;
+
+		if ( !format ) var format = 'hex';
+
 		$(wrapper).spectrum({
-			color: hex,
-			preferredFormat: 'hex',
+			color: col,
+			preferredFormat: format,
 			showInitial: true,
-			showAlpha: false,
+			showInput: showInput,
+			showAlpha: showAlpha,
 			chooseText: 'Choose',
 			cancelText: 'Cancel',
 			containerClassName: 'dark clip',
-			change: function(hex) {
+			change: function(col) {
 
-				var r = Math.round(hex._r).toString(16);
-				var g = Math.round(hex._g).toString(16);
-				var b = Math.round(hex._b).toString(16);
+				if ( showAlpha ) {
 
-				if ( r.length == 1 ) r += '0';
-				if ( g.length == 1 ) g += '0';
-				if ( b.length == 1 ) b += '0';
+					var color = {
+						r : Math.round(col._r),
+						g : Math.round(col._g),
+						b : Math.round(col._b),
+						a : col._a
+					}
 
-				hex = '#' + r + g + b;
+					var bg = Wu.Tools.rgbaStyleStr(color);
 
-				wrapper.style.background = hex;
 
-				fn(hex, key, wrapper);
-			}
+				} else {
+
+					var r = Math.round(col._r).toString(16);
+					var g = Math.round(col._g).toString(16);
+					var b = Math.round(col._b).toString(16);
+
+					if ( r.length == 1 ) r += '0';
+					if ( g.length == 1 ) g += '0';
+					if ( b.length == 1 ) b += '0';
+
+					var color = '#' + r + g + b;
+					var bg = color;
+
+				}
+
+				wrapper.style.background = bg;
+				fn(color, key, wrapper);
+
+			}		
+
 		});
 
 	},	
@@ -438,7 +481,7 @@ Wu.button = Wu.Class.extend({
 		// Wu.DomEvent.on(input, 'blur', fn);
 
 		// Force numeric
-		if ( !allowText ) input.onkeypress = this.forceNumeric;
+		if ( !allowText ) input.onkeypress = Wu.Tools.forceNumeric;
 
 		Wu.DomEvent.on(input, 'blur', this.blurInput, this);
 
@@ -494,7 +537,7 @@ Wu.button = Wu.Class.extend({
 		Wu.DomEvent.on(miniInput, 'blur', fn);
 
 		// Force numeric
-		if ( !allowText ) miniInput.onkeypress = this.forceNumeric;		    
+		if ( !allowText ) miniInput.onkeypress = Wu.Tools.forceNumeric;		    
 
 	},
 

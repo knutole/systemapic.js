@@ -43,7 +43,7 @@ Wu.satelliteAngle = Wu.Class.extend({
 		if ( !angle && angle != 0 ) return;
 
 		this.angleContainer = Wu.DomUtil.createId('div', 'd3-satellite-angle-container', this._innerContainer);
-		this.angleTitle = Wu.DomUtil.create('div', 'd3-satellite-title', this.angleContainer, 'Målevinkel');
+		this.angleTitle = Wu.DomUtil.create('div', 'd3-satellite-title', this.angleContainer, 'Measurement angle');
 
 		var size = 0.55,
 		    padding = 10,
@@ -181,7 +181,7 @@ Wu.satelliteAngle = Wu.Class.extend({
 		if ( !path && path != 0 ) return;
 
 		this.compassContainer = Wu.DomUtil.createId('div', 'd3-satellite-compass-container', this._innerContainer);		
-		this.compassTitle = Wu.DomUtil.create('div', 'd3-satellite-title', this.compassContainer, 'Satelittkurs');
+		this.compassTitle = Wu.DomUtil.create('div', 'd3-satellite-title', this.compassContainer, 'Line of sight');
 
 
 		var size = 0.75,

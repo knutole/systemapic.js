@@ -60,7 +60,8 @@ Wu.Chrome.Projects = Wu.Chrome.extend({
 		this._projectsWrapper = Wu.DomUtil.create('div', 'chrome-left-project-wrapper', projectsContainer);
 
 		// iterate projects, create item
-		_.each(projects, this._addProject, this);
+		// _.each(projects, this._addProject, this);
+		_.each(projects, this._addProject.bind(this));
 	
 	},
 
@@ -566,7 +567,7 @@ Wu.Chrome.Projects = Wu.Chrome.extend({
 		Wu.DomEvent.on(saveBtn, 'click', this._updateProject.bind(this, options), this);
 
 		// add delete button only if access
-		if (project.store.createdBy == app.Account.getUuid()) {
+		if (project.store.createdBy == app.Account.getUuid() || app.Account.isSuper()) {
 			var delBtn = Wu.DomUtil.create('div', 'smooth-fullscreen-delete', buttonsWrapper, 'Delete');
 			Wu.DomEvent.on(delBtn, 'click', this._deleteProject.bind(this, options), this);
 		}
@@ -854,7 +855,7 @@ Wu.Chrome.Projects = Wu.Chrome.extend({
 
 			}, this);
 
-		}, this);
+		}.bind(this));
 
 
 		// events
@@ -1277,11 +1278,11 @@ Wu.Chrome.Projects = Wu.Chrome.extend({
 		}
 
 		// send event
-		app.Socket.sendUserEvent({
-		    	user : app.Account.getFullName(),
-		    	event : '`updated project` ' + project.getTitle(),
-		    	description : description,
-		    	timestamp : Date.now()
+		// app.Socket.sendUserEvent({
+		app.log('updated:project', {
+		    	info : description,
+		    	project : project,
+		    	category : 'project'
 		});
 	},
 
@@ -1441,19 +1442,14 @@ Wu.Chrome.Projects = Wu.Chrome.extend({
 
 	_togglePane : function () {
 
+		console.error('deprecated?');
+
 		// right chrome
 		var chrome = this.options.chrome;
 
 		// open/close
 		this._isOpen ? chrome.close(this) : chrome.open(this); // pass this tab
 
-		// fire open event
-		if (this._isOpen) app.Socket.sendUserEvent({
-			user : app.Account.getFullName(),
-			event : 'opened',
-			description : 'the left pane',
-			timestamp : Date.now()
-		});
 	},
 
 	_show : function () {

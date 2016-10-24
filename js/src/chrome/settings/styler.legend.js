@@ -12,27 +12,13 @@ Wu.Legend = Wu.Class.extend({
 		if ( app.options.customizations && app.options.customizations.satelliteView ) {
 			this.satelliteView = true;
 		}
-		
 
 	},
-
-	// LEGEND CREATOR LEGEND CREATOR LEGEND CREATOR LEGEND CREATOR LEGEND CREATOR LEGEND CREATOR
-	// LEGEND CREATOR LEGEND CREATOR LEGEND CREATOR LEGEND CREATOR LEGEND CREATOR LEGEND CREATOR
-	// LEGEND CREATOR LEGEND CREATOR LEGEND CREATOR LEGEND CREATOR LEGEND CREATOR LEGEND CREATOR
-	// LEGEND CREATOR LEGEND CREATOR LEGEND CREATOR LEGEND CREATOR LEGEND CREATOR LEGEND CREATOR
-	// LEGEND CREATOR LEGEND CREATOR LEGEND CREATOR LEGEND CREATOR LEGEND CREATOR LEGEND CREATOR
-	// LEGEND CREATOR LEGEND CREATOR LEGEND CREATOR LEGEND CREATOR LEGEND CREATOR LEGEND CREATOR
-	// LEGEND CREATOR LEGEND CREATOR LEGEND CREATOR LEGEND CREATOR LEGEND CREATOR LEGEND CREATOR
-	// LEGEND CREATOR LEGEND CREATOR LEGEND CREATOR LEGEND CREATOR LEGEND CREATOR LEGEND CREATOR
-	// LEGEND CREATOR LEGEND CREATOR LEGEND CREATOR LEGEND CREATOR LEGEND CREATOR LEGEND CREATOR
 
 	refreshLegend : function (legend) {
-
 		this.legendObj = legend ? JSON.parse(legend) : this.legendObj;
 		this.updateLegend();	
-
 	},
-
 
 	updateLegend : function () {
 
@@ -424,17 +410,15 @@ Wu.Legend = Wu.Class.extend({
 
 		var cont     = Wu.DomUtil.create('div', 'info-legend-gradient-bottomline', container);
 		var leg      = Wu.DomUtil.create('div', 'legend-gradient-footer', cont);
-
-		leg.id   = 'legend-gradient-footer';
-
-		var top      = Wu.DomUtil.create('div', 'legend-gradient-footer-top', leg, 'Deformasjon i sikteretning til satellitten')
+		leg.id   	 = 'legend-gradient-footer';
+		var top      = Wu.DomUtil.create('div', 'legend-gradient-footer-top', leg, 'Deformation in satellite line of sight')
 		var lineCont = Wu.DomUtil.create('div', 'legend-gradient-footer-line-container', leg);
 		var line     = Wu.DomUtil.create('div', 'legend-gradient-footer-line', lineCont);
 		var arrowL   = Wu.DomUtil.create('div', 'legend-gradient-footer-arrow-left', lineCont);
 		var arrowR   = Wu.DomUtil.create('div', 'legend-gradient-footer-arrow-right', lineCont);
 		var midLine  = Wu.DomUtil.create('div', 'legend-gradient-footer-middle-line', lineCont);
-		var textL    = Wu.DomUtil.create('div', 'legend-gradient-footer-toward', leg, 'Mot satellitten');
-		var textR    = Wu.DomUtil.create('div', 'legend-gradient-footer-from', leg, 'Fra satellitten');
+		var textL    = Wu.DomUtil.create('div', 'legend-gradient-footer-toward', leg, 'Towards satellite');
+		var textR    = Wu.DomUtil.create('div', 'legend-gradient-footer-from', leg, 'Away from satellite');
 	},
 
 	checkKey : function (e) {
@@ -1620,7 +1604,7 @@ Wu.Tools.Legend = {
 	
 		var gradientFooter  ='<div class="info-legend-gradient-bottomline">';
 		    gradientFooter += '<div id="legend-gradient-footer" class="legend-gradient-footer">';
-		    gradientFooter += '<div class="legend-gradient-footer-top">Deformasjon i sikteretning til satellitten</div>';
+		    gradientFooter += '<div class="legend-gradient-footer-top">Deformation in satellite line of sight</div>';
 		    gradientFooter += '<div class="legend-gradient-footer-line-container">';
 
 		    gradientFooter += '<div class="legend-gradient-footer-line"></div>';
@@ -1629,8 +1613,8 @@ Wu.Tools.Legend = {
 		    gradientFooter += '<div class="legend-gradient-footer-middle-line"></div>';
     		    gradientFooter += '</div>';
 
-		    gradientFooter += '<div class="legend-gradient-footer-toward">Mot satellitten</div>';
-		    gradientFooter += '<div class="legend-gradient-footer-from">Fra satellitten</div>';
+		    gradientFooter += '<div class="legend-gradient-footer-toward">Towards satellite</div>';
+		    gradientFooter += '<div class="legend-gradient-footer-from">Away from satellite</div>';
     		    
 		    gradientFooter += '</div>';
 		    gradientFooter += '</div>';

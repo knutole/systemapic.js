@@ -214,6 +214,11 @@ Wu.Api = Wu.Class.extend({
 		this.post(path, options, done);
 	},
 
+	getLayer : function (options, done) {
+		var path = '/v2/layers/getLayer';
+		this.post(path, options, done);
+	},
+
 	downloadDataset : function (options, done) {
 		// var path = '/api/file/downloadDataset';
 		var path = '/v2/data/download';
@@ -236,6 +241,10 @@ Wu.Api = Wu.Class.extend({
 
 
   	// LAYERS
+  	getWMSLayers : function (options, done) {
+  		var path  = '/v2/layers/wms';
+  		this.get(path, options, done);
+  	},
 
 
 	deleteLayer : function (options, done) {
@@ -247,7 +256,6 @@ Wu.Api = Wu.Class.extend({
 	updateLayer : function (options, done) {
 		// var path = '/api/layer/update';
 		var path = '/v2/layers/update';
-		console.error('updateLayer', options);
 		this.post(path, options, done);
 	},
 
@@ -265,9 +273,12 @@ Wu.Api = Wu.Class.extend({
 	},
 
 	json2carto : function (options, done) {
-		// var path = '/api/geo/json2carto';
-		// var path = '/v2/carto/json';
 		var path = '/v2/layers/carto/json';
+		this.post(path, options, done);
+	},
+
+	customCarto : function (options, done) {
+		var path = '/v2/layers/carto/custom';
 		this.post(path, options, done);
 	},
 
@@ -300,12 +311,33 @@ Wu.Api = Wu.Class.extend({
 		this.post(path, options, done);
 	},
 
+	removeFromCube : function (options, done) {
+		var path = '/v2/cubes/remove';
+		this.post(path, options, done);
+	},
 
+	addToCube : function (options, done) {
+		var path = '/v2/cubes/add';
+		this.post(path, options, done);
+	},
 
+	createCube : function (options, done) {
+		var path = '/v2/cubes/create';
+		this.post(path, options, done);
+	},
+
+	
 	// TILES
 	// [pile]
 	createTileLayer : function (options, done) {
 		var path = '/v2/tiles/create';
+		this.post(path, options, done);
+	},
+
+
+	// [pile]
+	addMask : function (options, done) {
+		var path = '/v2/cubes/mask';
 		this.post(path, options, done);
 	},
 
@@ -366,6 +398,10 @@ Wu.Api = Wu.Class.extend({
 
 	// QUERIES
 
+	queryCube : function (options, done) {
+		var path = '/v2/cubes/query';
+		this.post(path, options, done);
+	},
 	
 	dbFetchArea : function (options, done) {
 		var path = '/v2/query/polygon';
@@ -382,6 +418,10 @@ Wu.Api = Wu.Class.extend({
 		this.post(path, options, done);
 	},
 
+	getVectorPoints : function (options, done) {
+		var path = '/v2/query/getVectorPoints';
+		this.post(path, options, done);
+	},
 
 
 
@@ -439,6 +479,19 @@ Wu.Api = Wu.Class.extend({
 		this.post(path, options, done);
 	},
 
+
+
+
+
+
+
+
+
+
+
+
+
+
 	
 	// helper fn's
 	post : function (path, options, done) {
@@ -474,7 +527,6 @@ Wu.Api = Wu.Class.extend({
 		var options = _.isString(json) ? Wu.parse(json) : json;
 		options.access_token = options.access_token || access_token;
 		var send_json = Wu.stringify(options);
-
 		// send
 		http.send(send_json);
 	},
@@ -521,7 +573,7 @@ Wu.Api = Wu.Class.extend({
 		if (!_.isEmpty(options)) {
 			_.forOwn(options, function (value, key) {
 				// encode and add
-				url += _.contains(url, '?') ? '&' : '?';
+				url += _.includes(url, '?') ? '&' : '?';
 				url += encodeURIComponent(key) + '=' + encodeURIComponent(value);
 			});
 		}
